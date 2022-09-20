@@ -10,6 +10,7 @@ Description: ChemicalNetwork object just needs to have methods called
 'RateEquations' and 'Jacobian'
 
 """
+import ares.static.darkMatterHeating as darkMatterHeating # Bin Xia
 
 import copy, sys
 import numpy as np
@@ -66,30 +67,41 @@ class ChemicalNetwork(object):
         ##
         # Figure out mapping from q vector to things with names
         ##
+        # added by Bin Xia
+        self.dark_matter_heating = False
+        if self.dark_matter_heating:
+            self.Nev_no_dm = self.Nev - 2
+            print('#'*60, 'self.dark_matter_heating = ', self.dark_matter_heating)
+        else:
+            self.Nev_no_dm = self.Nev
+            print('#'*60, 'self.dark_matter_heating = ', self.dark_matter_heating)
 
         # Hydrogen-only, isothermal
-        if self.Nev == 3:
+        if self.Nev_no_dm == 3:
             self._parse_q = lambda q, n_H: \
                 ({'h_1': q[0], 'h_2': q[1]}, {'h': n_H}, q[2]  * n_H)
 
         # Hydrogen-only, non-isothermal
-        elif self.Nev == 4:
+        elif self.Nev_no_dm == 4:
             self._parse_q = lambda q, n_H: \
                 ({'h_1': q[0], 'h_2': q[1]}, {'h': n_H}, q[2]  * n_H)
 
         # Helium included, isothermal
-        elif self.Nev == 6:
+        elif self.Nev_no_dm == 6:
             self._parse_q = lambda q, n_H: \
                 ({'h_1': q[0], 'h_2': q[1], 'he_1': q[2], 'he_2': q[3], \
                     'he_3': q[4]}, {'h': n_H, 'he': self.y * n_H}, \
                     q[-1] * n_H)
 
         # Helium included, non-isothermal
-        elif self.Nev == 7:
+        elif self.Nev_no_dm == 7:
             self._parse_q = lambda q, n_H: \
                 ({'h_1': q[0], 'h_2': q[1], 'he_1': q[2], 'he_2': q[3], \
                     'he_3': q[4]}, {'h': n_H, 'he': self.y * n_H}, \
                     q[-2] * n_H)
+        else:
+            print('#'*60, 'self.Nev_no_dm = ', self.Nev_no_dm)
+            raise ValueError('self.Nev_no_dm = ', self.Nev_no_dm)
 
     @property
     def monotonic_EoR(self):
@@ -154,9 +166,9 @@ class ChemicalNetwork(object):
             CF *= (n_H * (1. + y) / n_e)
 
         # Where do the electrons live?
-        if self.Nev == 6:
+        if self.Nev_no_dm == 6:
             e = -1
-        elif self.Nev == 7:
+        elif self.Nev_no_dm == 7:
             e = -2
         else:
             e = 2
@@ -309,6 +321,17 @@ class ChemicalNetwork(object):
             dqdt['Tk'] = 0.0
 
         ##
+        # Add in charged-dark-matter cooling
+        ## added by Bin Xia
+        #print('#'*60, 'z = ', z)
+        if self.dark_matter_heating:
+            print('#'*60, 'z = ', z)
+            interaction = darkMatterHeating.baryon_dark_matter_interaction(z, q[-1], q[-4], xe, q[-3])
+            dqdt['Tk'] += interaction['baryon']*2/3
+            dqdt['Tchi'] = -2*self.cosm.HubbleParameter(z)*q[-4] + interaction['dark matter']*2/3
+            dqdt['v_stream'] = -self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
+            print('#'*60, 'dark_matter_heating working', '#'*60)
+        ##
         # Add in Lyman-alpha heating.
         if self.lya_heating:
             dqdt['Tk'] += k_heat_lya * self.cosm.HubbleParameter(z) * to_temp
@@ -390,9 +413,9 @@ class ChemicalNetwork(object):
         J = self.zeros_jac.copy()
 
         # Where do the electrons live?
-        if self.Nev == 6:
+        if self.Nev_no_dm == 6:
             e = -1
-        elif self.Nev == 7:
+        elif self.Nev_no_dm == 7:
             e = -2
         else:
             e = 2
@@ -440,7 +463,7 @@ class ChemicalNetwork(object):
         ###
         ## HELIUM INCLUDED CASES: N=6 (isothermal), N=7 (thermal evolution)
         ###
-        if self.Nev in [6, 7]:
+        if self.Nev_no_dm in [6, 7]:
 
             # Secondary ionization
             gamma_HeI = 0.0

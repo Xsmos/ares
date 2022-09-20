@@ -467,8 +467,15 @@ class Grid(object):
                 self.parents_by_ion[name] = element_name
                 self.evolving_fields.append(name)
 
+        # added by Bin Xia
+        self.dark_matter_heating = False
+        if self.dark_matter_heating:
+            self.evolving_fields.append('Tchi')
+            self.evolving_fields.append('v_stream')
+
         self.solve_ge = False
         self.evolving_fields.append('e')
+
         if not self.isothermal:
             self.evolving_fields.append('Tk')
 
