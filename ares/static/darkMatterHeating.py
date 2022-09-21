@@ -16,6 +16,7 @@ m_chi = .1*Cs.giga*Cs.eV / Cs.c**2
 
 def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_temperature, electron_ratio, stream_velocity):
     global z, Tb, xe, Tchi, v_stream
+    print('baryon_dark_matter_interaction working...')
 
     z = redshift
     Tb = baryon_temperature
@@ -26,6 +27,7 @@ def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_tem
     Q_b_rate = Q_b_from(Cs.m_p)
     Q_chi_rate = Q_chi_from(Cs.m_p)
     Drag = D()
+    print('baryon_dark_matter_interaction worked properly')
 
     return {'baryon': Q_b_rate, 'dark matter': Q_chi_rate, 'drag': Drag}
 

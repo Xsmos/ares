@@ -71,10 +71,10 @@ class ChemicalNetwork(object):
         self.dark_matter_heating = False
         if self.dark_matter_heating:
             self.Nev_no_dm = self.Nev - 2
-            print('#'*60, 'self.dark_matter_heating = ', self.dark_matter_heating)
+            print('#'*60, 'self.dark_matter_heating =', self.dark_matter_heating)
         else:
             self.Nev_no_dm = self.Nev
-            print('#'*60, 'self.dark_matter_heating = ', self.dark_matter_heating)
+            print('#'*60, 'self.dark_matter_heating =', self.dark_matter_heating)
 
         # Hydrogen-only, isothermal
         if self.Nev_no_dm == 3:
@@ -132,13 +132,14 @@ class ChemicalNetwork(object):
             [cell #, ionization rate coefficient (IRC), secondary IRC,
              photo-heating rate coefficient, particle density, time]
         """
-
+        
         self.q = q
 
         cell, k_ion, k_ion2, k_heat, k_heat_lya, ntot, time = args
 
         to_temp = 1. / (1.5 * ntot * k_B)
 
+        #print('self.expansion =', self.expansion)
         if self.expansion:
             z = self.cosm.TimeToRedshiftConverter(0., time, self.grid.zi)
             n_H = self.cosm.nH(z)
@@ -294,6 +295,7 @@ class ChemicalNetwork(object):
             dqdt['e'] -= y * x['he_3'] * self.alpha[cell,2] * n_e
 
         # Finish heating and cooling
+        #print('self.isothermal =', self.isothermal)
         if not self.isothermal:
             hubcool = 0.0
             compton = 0.0
@@ -310,12 +312,14 @@ class ChemicalNetwork(object):
                     # Seager, Sasselov, & Scott (2000) Equation 54
                     compton = rad_const * ucmb * n_e * (Tcmb - q[-1]) / ntot
 
+            # print('approx_thermal_history = ',self.grid.cosm.pf['approx_thermal_history']) # False in default, Bin Xia
             if self.grid.cosm.pf['approx_thermal_history']:
                 dqdt['Tk'] = heat * to_temp \
                     - self.cosm.cooling_rate(z, q[-1]) / self.cosm.dtdz(z)
             else:
                 dqdt['Tk'] = (heat - n_e * cool) * to_temp + compton \
                     - hubcool - q[-1] * n_H * dqdt['e'] / ntot
+            #print("dqdt['Tk'] =", dqdt['Tk'])
 
         else:
             dqdt['Tk'] = 0.0
@@ -323,6 +327,7 @@ class ChemicalNetwork(object):
         ##
         # Add in charged-dark-matter cooling
         ## added by Bin Xia
+        #print('#'*60, 'self.expansion =', self.expansion)
         #print('#'*60, 'z = ', z)
         if self.dark_matter_heating:
             print('#'*60, 'z = ', z)
