@@ -19,6 +19,8 @@ from ..util.Warnings import solver_error
 from ..physics.RateCoefficients import RateCoefficients
 from ..physics.Constants import k_B, sigma_T, m_e, c, s_per_myr, erg_per_ev, h
 
+import matplotlib.pyplot as pl
+
 rad_const = (8. * sigma_T / 3. / m_e / c)
 
 class ChemicalNetwork(object):
@@ -223,6 +225,12 @@ class ChemicalNetwork(object):
                 cool += self.zeta[cell,i] * x[sp] * n[elem]  # ionization
                 cool += self.psi[cell,i] * x[sp] * n[elem]   # excitation
 
+                if q[-1] >= 0:
+                    with open("Bin_Tk.txt", 'a') as T_file:
+                        T_file.write("{} ".format(q[-1]))
+                    with open("Bin_coolingRate.txt", 'a') as R_file:
+                        R_file.write("{} ".format(self.zeta[cell,i]))
+
             for i, sp in enumerate(self.ions):
                 elem = self.grid.parents_by_ion[sp]
 
@@ -365,6 +373,7 @@ class ChemicalNetwork(object):
             err = 'NaN encountered in RateEquations! t={}, z={}'.format(time, z)
             raise ValueError(err)
         if (self.q < 0).sum():
+            print('q =', q) # added by Bin Xia
             solver_error(self.grid, -1000, [self.q], [self.dqdt], -1000, cell, -1000)
             raise ValueError('Something < 0.')
 

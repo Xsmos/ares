@@ -110,10 +110,12 @@ class GasParcel(object):
         """
 
         # First, get coefficients that only depend on kinetic temperature
+        print('self.grid.isothermal =', self.grid.isothermal) # Bin Xia
         if self.grid.isothermal:
             self.rate_coefficients.update(self.chem.rcs)
         else:
-            C = self.chem.chemnet.SourceIndependentCoefficients(data['Tk'])
+            C = self.chem.chemnet.SourceIndependentCoefficients(data['Tk']) # Bin Xia thinks we should not use data['Tk'] here, instead we should use q[-1]
+            # print('Tk =', self.q[-1])
             self.rate_coefficients.update(C)
 
         self.rate_coefficients.update(kwargs)
