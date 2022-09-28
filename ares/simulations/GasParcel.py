@@ -110,7 +110,7 @@ class GasParcel(object):
         """
 
         # First, get coefficients that only depend on kinetic temperature
-        print('self.grid.isothermal =', self.grid.isothermal) # Bin Xia
+        #print('self.grid.isothermal =', self.grid.isothermal) # Bin Xia
         if self.grid.isothermal:
             self.rate_coefficients.update(self.chem.rcs)
         else:

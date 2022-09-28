@@ -6,7 +6,6 @@ import os
 pf = \
 {
     'grid_cells': 64,
-    'isothermal': False, # Bin Xia wants False
     'stop_time': 1e2,
     'radiative_transfer': False,
     'density_units': 1.0,
@@ -15,14 +14,17 @@ pf = \
     'restricted_timestep': None,
     'initial_temperature': np.logspace(3, 5, 64),
     'initial_ionization': [1.-1e-8, 1e-8],        # neutral
-    #'expansion' : True, # added by Bin Xia
+    'isothermal': False, # Bin Xia wants False
+    'expansion': True, # added by Bin Xia
+    'dark_matter_heating': False, # added by Bin Xia
 }
 
 if os.path.exists("Bin_Tk.txt"):
     os.remove("Bin_Tk.txt")
 if os.path.exists("Bin_coolingRate.txt"):
     os.remove("Bin_coolingRate.txt")
-
+if os.path.exists("Bin_z.txt"):
+    os.remove("Bin_z.txt")
 sim = ares.simulations.GasParcel(**pf)
 sim.run()
 
@@ -31,17 +33,24 @@ import numpy as np
 import matplotlib.pyplot as pl
 Tk = np.loadtxt("Bin_Tk.txt")
 CoolingRate = np.loadtxt("Bin_coolingRate.txt")
-grid_data_Tk = np.loadtxt("grid_data_Tk.txt")
+z = np.loadtxt("Bin_z.txt")
+#grid_data_Tk = np.loadtxt("grid_data_Tk.txt")
 
-pl.scatter(Tk, CoolingRate, s = 1)
-pl.plot(Tk, grid_data_Tk)
+fig, ax = pl.subplots(1, 2, figsize = (10,6))
 
-pl.xlabel('T [K]')
-pl.ylabel('$\mathrm{Cooling\ Rate\ [erg\ s^{-1}\ cm^3]}$')
-pl.xscale("log")
-pl.yscale("log")
-'''
-pl.xlim([1e2, 1e8])
-pl.ylim([1e-30, 1e-20])
-'''
+ax[0].scatter(Tk, CoolingRate, s = 1)
+#pl.plot(Tk, grid_data_Tk)
+ax[0].set_xlabel('T [K]')
+ax[0].set_ylabel('$\mathrm{Cooling\ Rate\ [erg\ s^{-1}\ cm^3]}$')
+ax[0].set_xscale("log")
+ax[0].set_yscale("log")
+ax[0].set_xlim([1e2, 1e8])
+ax[0].set_ylim([1e-30, 1e-20])
+
+
+ax[1].scatter(z+1, Tk, s = 1)
+ax[1].set_xlabel('$z$ + 1')
+ax[1].set_ylabel('$T_k$ [K]')
+ax[1].set_yscale("log")
+
 pl.show()

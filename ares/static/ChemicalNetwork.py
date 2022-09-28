@@ -40,6 +40,7 @@ class ChemicalNetwork(object):
             recombination=recombination, interp_rc=interp_rc)
 
         self.isothermal = self.grid.isothermal
+        self.dark_matter_heating = self.grid.dark_matter_heating # added by Bin Xia
         self.secondary_ionization = self.grid.secondary_ionization
         self.lya_heating = self.grid.lya_heating
 
@@ -70,7 +71,7 @@ class ChemicalNetwork(object):
         # Figure out mapping from q vector to things with names
         ##
         # added by Bin Xia
-        self.dark_matter_heating = False
+        #self.dark_matter_heating = True
         if self.dark_matter_heating:
             self.Nev_no_dm = self.Nev - 2
             print('#'*60, 'self.dark_matter_heating =', self.dark_matter_heating)
@@ -146,6 +147,7 @@ class ChemicalNetwork(object):
             z = self.cosm.TimeToRedshiftConverter(0., time, self.grid.zi)
             n_H = self.cosm.nH(z)
             CF = self.grid.clumping_factor(z)
+            print('z, Tk: ', z, q[-1])
         else:
             n_H = self.grid.n_H[cell]
             CF = self.C
@@ -225,11 +227,14 @@ class ChemicalNetwork(object):
                 cool += self.zeta[cell,i] * x[sp] * n[elem]  # ionization
                 cool += self.psi[cell,i] * x[sp] * n[elem]   # excitation
 
-                if q[-1] >= 0:
-                    with open("Bin_Tk.txt", 'a') as T_file:
-                        T_file.write("{} ".format(q[-1]))
-                    with open("Bin_coolingRate.txt", 'a') as R_file:
-                        R_file.write("{} ".format(self.zeta[cell,i]))
+                #print('z, Tk =', z, q[-1])
+                #if q[-1] >= 0:
+                with open("Bin_Tk.txt", 'a') as T_file:
+                    T_file.write("{} ".format(q[-1]))
+                with open("Bin_coolingRate.txt", 'a') as R_file:
+                    R_file.write("{} ".format(self.zeta[cell,i] * x[sp] * n[elem]+self.psi[cell,i] * x[sp] * n[elem]))
+                with open("Bin_z.txt", 'a') as z_file:
+                    z_file.write("{} ".format(z))
 
             for i, sp in enumerate(self.ions):
                 elem = self.grid.parents_by_ion[sp]
@@ -325,8 +330,9 @@ class ChemicalNetwork(object):
                 dqdt['Tk'] = heat * to_temp \
                     - self.cosm.cooling_rate(z, q[-1]) / self.cosm.dtdz(z)
             else:
-                dqdt['Tk'] = (heat - n_e * cool) * to_temp + compton \
-                    - hubcool - q[-1] * n_H * dqdt['e'] / ntot
+                '''dqdt['Tk'] = (heat - n_e * cool) * to_temp + compton \
+                    - hubcool - q[-1] * n_H * dqdt['e'] / ntot'''
+                dqdt['Tk'] = compton - hubcool
             #print("dqdt['Tk'] =", dqdt['Tk'])
 
         else:
@@ -338,12 +344,12 @@ class ChemicalNetwork(object):
         #print('#'*60, 'self.expansion =', self.expansion)
         #print('#'*60, 'z = ', z)
         if self.dark_matter_heating:
-            print('#'*60, 'z = ', z)
+            #print('#'*60, 'z = ', z)
             interaction = darkMatterHeating.baryon_dark_matter_interaction(z, q[-1], q[-4], xe, q[-3])
             dqdt['Tk'] += interaction['baryon']*2/3
             dqdt['Tchi'] = -2*self.cosm.HubbleParameter(z)*q[-4] + interaction['dark matter']*2/3
             dqdt['v_stream'] = -self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
-            print('#'*60, 'dark_matter_heating working', '#'*60)
+            #print('#'*60, 'dark_matter_heating working', '#'*60)
         ##
         # Add in Lyman-alpha heating.
         if self.lya_heating:
@@ -370,6 +376,7 @@ class ChemicalNetwork(object):
             self.dqdt[i] = dqdt[sp]
 
         if np.isnan(self.dqdt).sum():
+            print('dqdt =', self.dqdt) # added by Bin Xia
             err = 'NaN encountered in RateEquations! t={}, z={}'.format(time, z)
             raise ValueError(err)
         if (self.q < 0).sum():

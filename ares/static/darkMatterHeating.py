@@ -1,5 +1,6 @@
 import scipy.constants as Cs
 import numpy as np
+from scipy.special import erf
 
 reduced_H = 0.74
 H0 = 100*reduced_H*3.24077929e-20 # s^-1; 74 km/s/Mpc
@@ -16,7 +17,7 @@ m_chi = .1*Cs.giga*Cs.eV / Cs.c**2
 
 def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_temperature, electron_ratio, stream_velocity):
     global z, Tb, xe, Tchi, v_stream
-    print('baryon_dark_matter_interaction working...')
+    #print('baryon_dark_matter_interaction working...')
 
     z = redshift
     Tb = baryon_temperature
@@ -24,10 +25,12 @@ def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_tem
     xe = electron_ratio
     v_stream = stream_velocity
 
+    #print(z, Tb, Tchi, xe, v_stream)
+
     Q_b_rate = Q_b_from(Cs.m_p)
     Q_chi_rate = Q_chi_from(Cs.m_p)
     Drag = D()
-    print('baryon_dark_matter_interaction worked properly')
+    #print('baryon_dark_matter_interaction worked properly')
 
     return {'baryon': Q_b_rate, 'dark matter': Q_chi_rate, 'drag': Drag}
 
@@ -55,7 +58,7 @@ def F(r_t):
     if np.abs(r_t) <= 0:#0.01
         F = r_t**3 * np.sqrt(2/9/np.pi)#taylor expansion
     else:
-        F = np.erf(r_t/np.sqrt(2)) - np.sqrt(2/np.pi)*r_t*np.exp(-r_t**2 / 2)#accurate expression
+        F = erf(r_t/np.sqrt(2)) - np.sqrt(2/np.pi)*r_t*np.exp(-r_t**2 / 2)#accurate expression
     
     return F
 

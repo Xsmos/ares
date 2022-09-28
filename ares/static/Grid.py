@@ -310,6 +310,12 @@ class Grid(object):
         return self._isothermal
 
     @property
+    def dark_matter_heating(self): # added by Bin Xia
+        if not hasattr(self, '_dark_matter_heating'):
+            self.set_physics()
+        return self._dark_matter_heating
+
+    @property
     def secondary_ionization(self):
         if not hasattr(self, '_secondary_ionization'):
             self.set_physics()
@@ -379,11 +385,12 @@ class Grid(object):
         self.set_ionization(kwargs['initial_ionization'])
         self.set_temperature(kwargs['initial_temperature'])
 
-    def set_physics(self, isothermal=False, compton_scattering=False,
+    def set_physics(self, isothermal=False, dark_matter_heating=False, compton_scattering=False,
         secondary_ionization=0, expansion=False, recombination='B',
         clumping_factor=1.0, collisional_ionization=True, exotic_heating=False,
         lya_heating=0, **kwargs):
         self._isothermal = isothermal
+        self._dark_matter_heating = dark_matter_heating # added by Bin Xia
         self._compton_scattering = compton_scattering
         self._secondary_ionization = secondary_ionization
         self._expansion = expansion
@@ -468,7 +475,7 @@ class Grid(object):
                 self.evolving_fields.append(name)
 
         # added by Bin Xia
-        self.dark_matter_heating = False
+        #self.dark_matter_heating = True
         if self.dark_matter_heating:
             self.evolving_fields.append('Tchi')
             self.evolving_fields.append('v_stream')
@@ -485,6 +492,8 @@ class Grid(object):
             for field in self.evolving_fields:
                 self.data[field] = np.zeros(self.dims)
 
+        self.data['v_stream'] = np.ones(self.dims) # added by Bin Xia
+ 
         self.abundances_by_number = self.abundances
         self.element_abundances = [1.0]
         if include_He:
