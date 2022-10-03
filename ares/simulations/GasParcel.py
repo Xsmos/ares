@@ -114,8 +114,8 @@ class GasParcel(object):
         if self.grid.isothermal:
             self.rate_coefficients.update(self.chem.rcs)
         else:
-            print("update_rate_coefficients working ... (with T = {})".format(data['Tk']))
-            C = self.chem.chemnet.SourceIndependentCoefficients(data['Tk']) # Bin Xia thinks we should not use data['Tk'] here, instead we should use q[-1]
+            #print("update_rate_coefficients working ... (with T = {})".format(data['Tk']))
+            C = self.chem.chemnet.SourceIndependentCoefficients(data['Tk'])
             # print('Tk =', self.q[-1])
             self.rate_coefficients.update(C)
 
@@ -169,7 +169,7 @@ class GasParcel(object):
 
             # Re-compute rate coefficients
             self.update_rate_coefficients(data)
-            print("new loop of run for t={}, data['Tk']={}".format(t, data['Tk']))
+            #print("new loop of run for t={}, data['Tk']={}".format(t, data['Tk']))
             # Save data
             all_t.append(t)
             all_data.append(data.copy())

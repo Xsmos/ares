@@ -229,7 +229,7 @@ class ChemicalNetwork(object):
                 cool += self.zeta[cell,i] * x[sp] * n[elem]  # ionization
                 cool += self.psi[cell,i] * x[sp] * n[elem]   # excitation
 
-                print("q[-1]={:.11f}, t={:15f}, z={}, self.zeta={}".format(q[-1], t, z, self.zeta[cell,i]))
+                #print("q[-1]={:.11f}, t={:15f}, z={}, self.zeta={}".format(q[-1], t, z, self.zeta[cell,i]))
                 
                 with open("Bin_Tk.txt", 'a') as T_file:
                     T_file.write("{} ".format(q[-1]))
