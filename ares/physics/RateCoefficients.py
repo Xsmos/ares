@@ -185,6 +185,7 @@ class RateCoefficients(object):
         if self.rate_src == 'fk94':
             #print('species =', species)
             #np.savetxt('grid_data_Tk.txt', T)
+            #print('zeta is using T = ', T)
             if species == 0:
                 return 1.27e-21 * np.sqrt(T) * (1. + np.sqrt(T / 1e5))**-1. * np.exp(-1.58e5 / T)
             if species == 1: 
@@ -221,7 +222,7 @@ class RateCoefficients(object):
         """
         
         if self.rate_src == 'fk94':
-            # print('species =', species) # species = 0 by default
+            #print('psi is using T =', T) # species = 0 by default
             if species == 0: 
                 return 7.5e-19 * (1. + np.sqrt(T / 1e5))**-1. * np.exp(-1.18e5 / T)
             if species == 1: 

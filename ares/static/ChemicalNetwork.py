@@ -137,7 +137,6 @@ class ChemicalNetwork(object):
         """
         
         self.q = q
-
         cell, k_ion, k_ion2, k_heat, k_heat_lya, ntot, time = args
 
         to_temp = 1. / (1.5 * ntot * k_B)
@@ -147,11 +146,14 @@ class ChemicalNetwork(object):
             z = self.cosm.TimeToRedshiftConverter(0., time, self.grid.zi)
             n_H = self.cosm.nH(z)
             CF = self.grid.clumping_factor(z)
-            print('z, Tk: ', z, q[-1])
+            #print('z, Tk: ', z, q[-1])
         else:
             n_H = self.grid.n_H[cell]
             CF = self.C
             z = None
+
+        #print("RateEquations is using T = {}".format(q[-1]))
+        self.Beta, self.alpha, self.zeta, self.eta, self.psi, self.xi, self.omega = self.SourceIndependentCoefficients(q[-1], z).values() # added by Bin Xia
 
         if self.include_He:
             y = self.grid.element_abundances[1]
@@ -227,15 +229,15 @@ class ChemicalNetwork(object):
                 cool += self.zeta[cell,i] * x[sp] * n[elem]  # ionization
                 cool += self.psi[cell,i] * x[sp] * n[elem]   # excitation
 
-                #print('z, Tk =', z, q[-1])
-                #if q[-1] >= 0:
+                print("q[-1]={:.11f}, t={:15f}, z={}, self.zeta={}".format(q[-1], t, z, self.zeta[cell,i]))
+                
                 with open("Bin_Tk.txt", 'a') as T_file:
                     T_file.write("{} ".format(q[-1]))
                 with open("Bin_coolingRate.txt", 'a') as R_file:
                     R_file.write("{} ".format(self.zeta[cell,i] * x[sp] * n[elem]+self.psi[cell,i] * x[sp] * n[elem]))
                 with open("Bin_z.txt", 'a') as z_file:
                     z_file.write("{} ".format(z))
-
+                
             for i, sp in enumerate(self.ions):
                 elem = self.grid.parents_by_ion[sp]
 
@@ -330,9 +332,9 @@ class ChemicalNetwork(object):
                 dqdt['Tk'] = heat * to_temp \
                     - self.cosm.cooling_rate(z, q[-1]) / self.cosm.dtdz(z)
             else:
-                '''dqdt['Tk'] = (heat - n_e * cool) * to_temp + compton \
-                    - hubcool - q[-1] * n_H * dqdt['e'] / ntot'''
-                dqdt['Tk'] = compton - hubcool
+                dqdt['Tk'] = (heat - n_e * cool) * to_temp + compton \
+                    - hubcool - q[-1] * n_H * dqdt['e'] / ntot
+                #dqdt['Tk'] = compton - hubcool
             #print("dqdt['Tk'] =", dqdt['Tk'])
 
         else:
@@ -693,6 +695,7 @@ class ChemicalNetwork(object):
         Compute values of rate coefficients which depend only on
         temperature and/or number densities of electrons/ions.
         """
+        #print('SourceIndependentCoefficients is using T =', T)
 
         self.T = T
         self.Beta = np.zeros_like(self.grid.zeros_grid_x_absorbers)
