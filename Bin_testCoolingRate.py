@@ -12,7 +12,7 @@ pf = \
     'initial_timestep': 1,
     'max_timestep': 1e2,
     'restricted_timestep': None,
-    'initial_temperature': 20000,#np.logspace(3, 5, 64),
+    'initial_temperature': 20000,#np.logspace(3, 5, 64),#
     'initial_ionization': [1.-1e-8, 1e-8],        # neutral
     'isothermal': False, # Bin Xia wants False
     'expansion': True, # added by Bin Xia
