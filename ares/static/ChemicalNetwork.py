@@ -10,7 +10,7 @@ Description: ChemicalNetwork object just needs to have methods called
 'RateEquations' and 'Jacobian'
 
 """
-import ares.static.darkMatterHeating as darkMatterHeating # Bin Xia
+import ares.static.DarkMatterHeating as DarkMatterHeating # Bin Xia
 
 import copy, sys
 import numpy as np
@@ -347,7 +347,7 @@ class ChemicalNetwork(object):
         #print('#'*60, 'z = ', z)
         if self.dark_matter_heating:
             #print('#'*60, 'z = ', z)
-            interaction = darkMatterHeating.baryon_dark_matter_interaction(z, q[-1], q[-4], xe, q[-3])
+            interaction = DarkMatterHeating.baryon_dark_matter_interaction(z, q[-1], q[-4], xe, q[-3])
             dqdt['Tk'] += interaction['baryon']*2/3
             dqdt['Tchi'] = -2*self.cosm.HubbleParameter(z)*q[-4] + interaction['dark matter']*2/3
             dqdt['v_stream'] = -self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
