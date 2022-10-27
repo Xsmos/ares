@@ -153,7 +153,7 @@ class ChemicalNetwork(object):
             z = None
 
         #print("RateEquations is using T = {}".format(q[-1]))
-        self.Beta, self.alpha, self.zeta, self.eta, self.psi, self.xi, self.omega = self.SourceIndependentCoefficients(q[-1], z).values() # added by Bin Xia
+        # self.Beta, self.alpha, self.zeta, self.eta, self.psi, self.xi, self.omega = self.SourceIndependentCoefficients(q[-1], z).values() # added by Bin Xia
 
         if self.include_He:
             y = self.grid.element_abundances[1]
