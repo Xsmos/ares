@@ -475,11 +475,10 @@ class Grid(object):
                 self.evolving_fields.append(name)
 
         # added by Bin Xia
-        #self.dark_matter_heating = True
         if self.dark_matter_heating:
             self.evolving_fields.append('Tchi')
             self.evolving_fields.append('v_stream')
-
+            
         self.solve_ge = False
         self.evolving_fields.append('e')
 
@@ -491,8 +490,9 @@ class Grid(object):
             self.data = {}
             for field in self.evolving_fields:
                 self.data[field] = np.zeros(self.dims)
-
-        self.data['v_stream'] = np.ones(self.dims) # added by Bin Xia
+                
+            if self.dark_matter_heating:
+                self.data['v_stream'] = np.ones(self.dims) # added by Bin Xia
  
         self.abundances_by_number = self.abundances
         self.element_abundances = [1.0]

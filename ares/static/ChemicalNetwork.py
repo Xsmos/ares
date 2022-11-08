@@ -71,13 +71,11 @@ class ChemicalNetwork(object):
         # Figure out mapping from q vector to things with names
         ##
         # added by Bin Xia
-        #self.dark_matter_heating = True
+        print('#'*60, 'In ChemicalNetwork.py, self.dark_matter_heating =', self.dark_matter_heating)
         if self.dark_matter_heating:
             self.Nev_no_dm = self.Nev - 2
-            print('#'*60, 'self.dark_matter_heating =', self.dark_matter_heating)
         else:
             self.Nev_no_dm = self.Nev
-            print('#'*60, 'self.dark_matter_heating =', self.dark_matter_heating)
 
         # Hydrogen-only, isothermal
         if self.Nev_no_dm == 3:
@@ -220,7 +218,7 @@ class ChemicalNetwork(object):
         heat = 0.0
         cool = 0.0
         if not self.isothermal:
-
+            self.Beta, self.alpha, self.zeta, self.eta, self.psi, self.xi, self.omega = self.SourceIndependentCoefficients(q[-1], z).values() # added by Bin Xia
             for i, sp in enumerate(self.neutrals):
                 elem = self.grid.parents_by_ion[sp]
 

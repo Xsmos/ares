@@ -23,7 +23,6 @@ class GasParcel(object):
         """
         Initialize a GasParcel object.
         """
-
         # This typically isn't the entire parameter file, Grid knows only
         # about a few things.
         self.pf = ParameterFile(**kwargs)

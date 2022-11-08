@@ -44,7 +44,7 @@ class Global21cm(AnalyzeGlobal21cm):
             may be used.
 
         """
-
+        print("In Global21cm.py, kwargs =", kwargs) # added by Bin Xia
         self.is_complete = False
 
         # See if this is a tanh model calculation
