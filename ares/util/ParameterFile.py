@@ -296,6 +296,7 @@ class ParameterFile(dict):
 
         # Keep user-supplied kwargs as attribute
         self._kwargs = kwargs.copy()
+        # print("In {}, dark_matter_heating = {}".format(__name__, kwargs['dark_matter_heating'])) # added by Bin Xia
 
         #print len(kwargs), len(defaults)
         #if len(kwargs) < 0.5 * len(defaults):

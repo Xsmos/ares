@@ -108,6 +108,7 @@ def MultiPhaseParameters():
     """
     pf = \
     {
+    #  "cgm_dark_matter_heating": False, # added by Bin Xia
      "cgm_grid_cells": 1,
      "cgm_expansion": True,
      "cgm_initial_temperature": [1e4],
@@ -120,6 +121,7 @@ def MultiPhaseParameters():
      "photon_counting": False,
      "monotonic_EoR": 1e-6,
 
+    #  "igm_dark_matter_heating": False, # added by Bin Xia
      "igm_grid_cells": 1,
      "igm_expansion": True,
      "igm_initial_temperature": None,
@@ -195,6 +197,7 @@ def PhysicsParameters():
 
     "secondary_lya": False,     # Collisionally excited Lyman alpha?
 
+    "dark_matter_heating": False, # added by Bin Xia
     "isothermal": 1,
     "expansion": 0,             # Referring to cosmology
     "collapse": 0,              # Referring to single-zone collapse

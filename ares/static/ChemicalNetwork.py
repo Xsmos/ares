@@ -39,8 +39,8 @@ class ChemicalNetwork(object):
         self.coeff = RateCoefficients(grid, rate_src=rate_src,
             recombination=recombination, interp_rc=interp_rc)
 
-        self.isothermal = self.grid.isothermal
         self.dark_matter_heating = self.grid.dark_matter_heating # added by Bin Xia
+        self.isothermal = self.grid.isothermal
         self.secondary_ionization = self.grid.secondary_ionization
         self.lya_heating = self.grid.lya_heating
 
@@ -54,6 +54,7 @@ class ChemicalNetwork(object):
         self.neutrals = self.grid.neutrals
         self.expansion = self.grid.expansion
         self.exotic_heating = self.grid.exotic_heating
+        self.dark_matter_heating = self.grid.dark_matter_heating # added by Bin Xia
         self.isothermal = self.grid.isothermal
         self.is_cgm_patch = self.grid.is_cgm_patch
         self.is_igm_patch = not self.grid.is_cgm_patch
@@ -71,7 +72,7 @@ class ChemicalNetwork(object):
         # Figure out mapping from q vector to things with names
         ##
         # added by Bin Xia
-        print('#'*60, 'In ChemicalNetwork.py, self.dark_matter_heating =', self.dark_matter_heating)
+        print('In {}, dark_matter_heating = {}'.format(__name__, self.dark_matter_heating))
         if self.dark_matter_heating:
             self.Nev_no_dm = self.Nev - 2
         else:
@@ -208,6 +209,7 @@ class ChemicalNetwork(object):
                       * x['h_1'] \
                       + self.alpha[cell,0] * n_e * x['h_2'] * CF
         dqdt['h_2'] = -dqdt['h_1']
+        print("h_1 =", dqdt['h_1'])
 
         ##
         # Heating & cooling
@@ -229,12 +231,12 @@ class ChemicalNetwork(object):
 
                 #print("q[-1]={:.11f}, t={:15f}, z={}, self.zeta={}".format(q[-1], t, z, self.zeta[cell,i]))
                 
-                with open("Bin_Tk.txt", 'a') as T_file:
-                    T_file.write("{} ".format(q[-1]))
-                with open("Bin_coolingRate.txt", 'a') as R_file:
-                    R_file.write("{} ".format(self.zeta[cell,i] * x[sp] * n[elem]+self.psi[cell,i] * x[sp] * n[elem]))
-                with open("Bin_z.txt", 'a') as z_file:
-                    z_file.write("{} ".format(z))
+                # with open("Bin_Tk.txt", 'a') as T_file:
+                #     T_file.write("{} ".format(q[-1]))
+                # with open("Bin_coolingRate.txt", 'a') as R_file:
+                #     R_file.write("{} ".format(self.zeta[cell,i] * x[sp] * n[elem]+self.psi[cell,i] * x[sp] * n[elem]))
+                # with open("Bin_z.txt", 'a') as z_file:
+                #     z_file.write("{} ".format(z))
                 
             for i, sp in enumerate(self.ions):
                 elem = self.grid.parents_by_ion[sp]
@@ -335,21 +337,22 @@ class ChemicalNetwork(object):
                 #dqdt['Tk'] = compton - hubcool
             #print("dqdt['Tk'] =", dqdt['Tk'])
 
+            # Add in charged-dark-matter cooling
+            ## added by Bin Xia
+            #print('#'*60, 'self.expansion =', self.expansion)
+            #print('#'*60, 'z = ', z)
+            if self.dark_matter_heating:
+                #print('#'*60, 'z = ', z)
+                interaction = DarkMatterHeating.baryon_dark_matter_interaction(z, q[-1], q[-4], xe, q[-3])
+                dqdt['Tk'] += interaction['baryon']*2/3
+                dqdt['Tchi'] = -2*self.cosm.HubbleParameter(z)*q[-4] + interaction['dark matter']*2/3
+                dqdt['v_stream'] = -self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
+                #print('#'*60, 'dark_matter_heating working', '#'*60)
+            ##
+
         else:
             dqdt['Tk'] = 0.0
 
-        ##
-        # Add in charged-dark-matter cooling
-        ## added by Bin Xia
-        #print('#'*60, 'self.expansion =', self.expansion)
-        #print('#'*60, 'z = ', z)
-        if self.dark_matter_heating:
-            #print('#'*60, 'z = ', z)
-            interaction = DarkMatterHeating.baryon_dark_matter_interaction(z, q[-1], q[-4], xe, q[-3])
-            dqdt['Tk'] += interaction['baryon']*2/3
-            dqdt['Tchi'] = -2*self.cosm.HubbleParameter(z)*q[-4] + interaction['dark matter']*2/3
-            dqdt['v_stream'] = -self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
-            #print('#'*60, 'dark_matter_heating working', '#'*60)
         ##
         # Add in Lyman-alpha heating.
         if self.lya_heating:

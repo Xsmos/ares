@@ -16,7 +16,7 @@ pf = \
     'initial_ionization': [1.-1e-8, 1e-8],        # neutral
     'isothermal': False, # Bin Xia wants False
     'expansion': True, # added by Bin Xia
-    'dark_matter_heating': False, # added by Bin Xia
+    'dark_matter_heating': True, # added by Bin Xia
 }
 
 if os.path.exists("Bin_Tk.txt"):

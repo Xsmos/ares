@@ -25,6 +25,10 @@ class GasParcel(object):
         """
         # This typically isn't the entire parameter file, Grid knows only
         # about a few things.
+        # print("In {}, kwargs = {}".format(__name__, kwargs['dark_matter_heating'])) # added by Bin Xia
+
+        # Bin = ParameterFile(**{'Bin': True}) # added by Bin Xia
+        # print("In {}, Bin = {}".format(__name__, Bin['Bin'])) # added by Bin Xia
         self.pf = ParameterFile(**kwargs)
 
         self._cosm_ = cosm

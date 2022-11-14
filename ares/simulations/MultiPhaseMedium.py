@@ -36,6 +36,7 @@ class MultiPhaseMedium(object):
 
         """
 
+        # print("In {}, kwargs = {}".format(__name__, kwargs)) # added by Bin Xia
         if pf is not None:
             self.pf = pf
 
@@ -46,14 +47,19 @@ class MultiPhaseMedium(object):
     @property
     def pf(self):
         if not hasattr(self, '_pf'):
+            
+            # print("In {}, kwargs ={}".format(__name__, self.kwargs)) # added by Bin Xia
 
-            self._pf = ParameterFile(**self.kwargs)
+            # dictBin = {'dark_matter_heating': True, "Bin_is_great": 1, 'isothermal': False} # added by Bin Xia
 
+            self._pf = ParameterFile(**self.kwargs)#**dictBin) #
+
+            # print("In {}, self._pf['dark_matter_heating'] = {}".format(__name__, self._pf['dark_matter_heating'])) # added by Bin Xia
             # Make sure PF gets modified by initial conditions choices
             # and ensure that these changes get passed to everything else
             # subsequently.
             inits = self.inits
-
+        # print("In {}, {}".format(__name__, type(self._pf))) # added by Bin Xia    
         return self._pf
 
     @pf.setter
