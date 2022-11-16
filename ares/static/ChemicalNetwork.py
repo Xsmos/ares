@@ -72,7 +72,7 @@ class ChemicalNetwork(object):
         # Figure out mapping from q vector to things with names
         ##
         # added by Bin Xia
-        print('In {}, dark_matter_heating = {}'.format(__name__, self.dark_matter_heating))
+        print('In {}, isothermal = {}, expansion = {}'.format(__name__, self.isothermal, self.expansion))
         if self.dark_matter_heating:
             self.Nev_no_dm = self.Nev - 2
         else:
@@ -81,12 +81,12 @@ class ChemicalNetwork(object):
         # Hydrogen-only, isothermal
         if self.Nev_no_dm == 3:
             self._parse_q = lambda q, n_H: \
-                ({'h_1': q[0], 'h_2': q[1]}, {'h': n_H}, q[2]  * n_H)
+                ({'h_1': q[0], 'h_2': q[1]}, {'h': n_H}, q[-1]  * n_H)#, q[2]  * n_H) # modified by Bin Xia
 
         # Hydrogen-only, non-isothermal
         elif self.Nev_no_dm == 4:
             self._parse_q = lambda q, n_H: \
-                ({'h_1': q[0], 'h_2': q[1]}, {'h': n_H}, q[2]  * n_H)
+                ({'h_1': q[0], 'h_2': q[1]}, {'h': n_H}, q[-2]  * n_H)#, q[2]  * n_H) # modified by Bin Xia
 
         # Helium included, isothermal
         elif self.Nev_no_dm == 6:
@@ -102,7 +102,7 @@ class ChemicalNetwork(object):
                     'he_3': q[4]}, {'h': n_H, 'he': self.y * n_H}, \
                     q[-2] * n_H)
         else:
-            print('#'*60, 'self.Nev_no_dm = ', self.Nev_no_dm)
+            print('#'*60, 'self.Nev_no_dm = ', self.Nev_no_dm) # added by Bin Xia
             raise ValueError('self.Nev_no_dm = ', self.Nev_no_dm)
 
     @property
@@ -165,6 +165,7 @@ class ChemicalNetwork(object):
         x, n, n_e = self._parse_q(q, n_H)
 
         xe = n_e / n_H
+        # print('xe/q[-2] =', xe/q[-2]) # added by Bin Xia
 
         # In two-zone model, this phase is assumed to be fully ionized
         # CF = clumping factor
@@ -209,7 +210,7 @@ class ChemicalNetwork(object):
                       * x['h_1'] \
                       + self.alpha[cell,0] * n_e * x['h_2'] * CF
         dqdt['h_2'] = -dqdt['h_1']
-        print("h_1 =", dqdt['h_1'])
+        # print("h_1 =", dqdt['h_1']) # added by Bin Xia
 
         ##
         # Heating & cooling
@@ -341,7 +342,7 @@ class ChemicalNetwork(object):
             ## added by Bin Xia
             #print('#'*60, 'self.expansion =', self.expansion)
             #print('#'*60, 'z = ', z)
-            if self.dark_matter_heating:
+            if self.dark_matter_heating and self.expansion:
                 #print('#'*60, 'z = ', z)
                 interaction = DarkMatterHeating.baryon_dark_matter_interaction(z, q[-1], q[-4], xe, q[-3])
                 dqdt['Tk'] += interaction['baryon']*2/3

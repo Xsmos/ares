@@ -16,6 +16,9 @@ m_chi = .1*Cs.giga*Cs.eV / Cs.c**2
 
 
 def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_temperature, electron_ratio, stream_velocity):
+    '''
+    input: z, Tb, xe, Tchi, v_stream
+    '''
     global z, Tb, xe, Tchi, v_stream
     #print('baryon_dark_matter_interaction working...')
 
