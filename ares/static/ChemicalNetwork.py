@@ -348,7 +348,7 @@ class ChemicalNetwork(object):
                 dqdt['Tk'] += interaction['baryon']*2/3
                 dqdt['Tchi'] = -2*self.cosm.HubbleParameter(z)*q[-4] + interaction['dark matter']*2/3
                 dqdt['v_stream'] = -self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
-                #print('#'*60, 'dark_matter_heating working', '#'*60)
+                # print('dvdt/v =', dqdt['v_stream']/q[-3])
             ##
 
         else:

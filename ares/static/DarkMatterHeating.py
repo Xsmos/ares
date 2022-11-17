@@ -60,7 +60,7 @@ def F(r_t):
     'Is it necessary to taylor expand F for small r_t?'
     #F = np.erf(r_t/np.sqrt(2)) - np.sqrt(2/np.pi)*r_t*np.exp(-r_t**2 / 2)
     
-    if np.abs(r_t) <= 0:#0.01
+    if np.abs(r_t) <= 0.01:#0:#
         F = r_t**3 * np.sqrt(2/9/np.pi)#taylor expansion
     else:
         F = erf(r_t/np.sqrt(2)) - np.sqrt(2/np.pi)*r_t*np.exp(-r_t**2 / 2)#accurate expression

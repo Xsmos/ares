@@ -199,6 +199,8 @@ def _sort_history(all_data, prefix='', squeeze=False):
     """
 
     data = {}
+    print("all_data[0] =", all_data[0])
+    print("all_data[-1] =", all_data[-1])
     for key in all_data[0]:
         if type(key) is int and not prefix.strip():
             name = int(key)
@@ -210,6 +212,7 @@ def _sort_history(all_data, prefix='', squeeze=False):
     # Loop over time snapshots
     for element in all_data:
 
+        print(prefix + "Tchi in element =", 'Tchi' in element) # added by Bin Xia
         # Loop over fields
         for key in element:
             if type(key) is int and not prefix.strip():

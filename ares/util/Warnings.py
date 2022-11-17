@@ -52,10 +52,10 @@ def dt_error(grid, z, q, dqdt, new_dt, cell, method, msg=dt_msg):
         name = grid.qmap[i]
         rows.append(name)
 
-        print('q = ', q)
-        print('q shape = ', np.shape(q))
-        print('cell = ', cell)
-        print('i = ',i)
+        # print('q = ', q) # added by Bin Xia
+        # print('q shape = ', np.shape(q)) # added by Bin Xia
+        # print('cell = ', cell) # added by Bin Xia
+        # print('i = ',i) # added by Bin Xia
         
         data.append([q[cell][i], dqdt[cell][i]])
 
