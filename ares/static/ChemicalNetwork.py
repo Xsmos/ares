@@ -311,7 +311,7 @@ class ChemicalNetwork(object):
             dqdt['e'] -= y * x['he_3'] * self.alpha[cell,2] * n_e
 
         # Finish heating and cooling
-        #print('self.isothermal =', self.isothermal)
+        # print(__name__, 'self.isothermal =', self.isothermal) # Xia
         if not self.isothermal:
             hubcool = 0.0
             compton = 0.0
@@ -336,23 +336,19 @@ class ChemicalNetwork(object):
                 dqdt['Tk'] = (heat - n_e * cool) * to_temp + compton \
                     - hubcool - q[-1] * n_H * dqdt['e'] / ntot
                 #dqdt['Tk'] = compton - hubcool
-            #print("dqdt['Tk'] =", dqdt['Tk'])
-
+            
             # Add in charged-dark-matter cooling
             ## added by Bin Xia
-            #print('#'*60, 'self.expansion =', self.expansion)
-            #print('#'*60, 'z = ', z)
             if self.dark_matter_heating and self.expansion:
-                #print('#'*60, 'z = ', z)
                 interaction = DarkMatterHeating.baryon_dark_matter_interaction(z, q[-1], q[-4], xe, q[-3])
                 dqdt['Tk'] += interaction['baryon']*2/3
                 dqdt['Tchi'] = -2*self.cosm.HubbleParameter(z)*q[-4] + interaction['dark matter']*2/3
                 dqdt['v_stream'] = -self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
                 # print('dvdt/v =', dqdt['v_stream']/q[-3])
             ##
-
         else:
             dqdt['Tk'] = 0.0
+
 
         ##
         # Add in Lyman-alpha heating.
@@ -669,7 +665,7 @@ class ChemicalNetwork(object):
         J[-1,-1] -= n_H * self.dqdt[e] / ntot
 
         # Cosmological effects
-        if self.expansion:
+        if self.expansion: # This whole block should be inside `if not self.isothermal`, otherwise q[-1] is xe, instead of gas temperature. Bin Xia
 
             # These terms have the correct units already
             J[-1,-1] -= 2. * self.cosm.HubbleParameter(z)

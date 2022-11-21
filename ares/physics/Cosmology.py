@@ -416,7 +416,7 @@ class Cosmology(object):
 
             self._thermal_history = {}
             self._thermal_history['z'] = np.array(zall)[-1::-1]
-            self._thermal_history['Tk'] = np.array(Tall)[-1::-1]
+            self._thermal_history['Tk'] = np.array(Tall)[-1::-1] # marked by Xia
             self._thermal_history['xe'] = 2e-4 * np.ones_like(zall)
 
         return self._thermal_history

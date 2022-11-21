@@ -30,7 +30,7 @@ def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_tem
     
     # if v_stream == 0:
     #     print('v_stream is 0!')
-    #print(z, Tb, Tchi, xe, v_stream)
+    # print(z, Tb, Tchi, xe, v_stream)
 
     Q_b_rate = Q_b_from(Cs.m_p)
     Q_chi_rate = Q_chi_from(Cs.m_p)

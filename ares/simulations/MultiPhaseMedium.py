@@ -544,3 +544,5 @@ class MultiPhaseMedium(object):
 
             self.all_t.append(0.0)
             self.all_data_igm.append(snapshot.copy())
+            print(__name__, "self.pf['isothermal'] =", self.pf["isothermal"], ", self.pf['expansion'] =", self.pf["expansion"])# Xia
+            print("snapshot:", snapshot)# Xia
