@@ -48,7 +48,7 @@ class MultiPhaseMedium(object):
     def pf(self):
         if not hasattr(self, '_pf'):
             
-            # print("In {}, kwargs ={}".format(__name__, self.kwargs)) # added by Bin Xia
+            print("In {}, kwargs ={}".format(__name__, self.kwargs)) # added by Bin Xia
 
             # dictBin = {'dark_matter_heating': True, "Bin_is_great": 1, 'isothermal': False} # added by Bin Xia
 
@@ -544,5 +544,5 @@ class MultiPhaseMedium(object):
 
             self.all_t.append(0.0)
             self.all_data_igm.append(snapshot.copy())
-            print(__name__, "self.pf['isothermal'] =", self.pf["isothermal"], ", self.pf['expansion'] =", self.pf["expansion"])# Xia
-            print("snapshot:", snapshot)# Xia
+            # print(__name__, "self.pf['isothermal'] =", self.pf["isothermal"], ", self.pf['expansion'] =", self.pf["expansion"])# Xia
+            # print("snapshot:", snapshot)# Xia

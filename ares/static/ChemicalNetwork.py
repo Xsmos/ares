@@ -311,7 +311,7 @@ class ChemicalNetwork(object):
             dqdt['e'] -= y * x['he_3'] * self.alpha[cell,2] * n_e
 
         # Finish heating and cooling
-        # print(__name__, 'self.isothermal =', self.isothermal) # Xia
+        print(__name__, 'self.isothermal =', self.isothermal, '| self.expansion =', self.expansion) # Xia
         if not self.isothermal:
             hubcool = 0.0
             compton = 0.0
@@ -339,7 +339,7 @@ class ChemicalNetwork(object):
             
             # Add in charged-dark-matter cooling
             ## added by Bin Xia
-            if self.dark_matter_heating and self.expansion:
+            if self.dark_matter_heating:
                 interaction = DarkMatterHeating.baryon_dark_matter_interaction(z, q[-1], q[-4], xe, q[-3])
                 dqdt['Tk'] += interaction['baryon']*2/3
                 dqdt['Tchi'] = -2*self.cosm.HubbleParameter(z)*q[-4] + interaction['dark matter']*2/3

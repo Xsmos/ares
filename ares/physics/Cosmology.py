@@ -90,7 +90,7 @@ class Cosmology(object):
         # Hydrogen, helium, electron, and baryon densities today (z = 0)
         self.rho_b_z0 = self.MeanBaryonDensity(0)
         self.rho_m_z0 = self.MeanMatterDensity(0)
-        self.rho_cdm_z0 = self.rho_m_z0 - self.rho_b_z0
+        self.rho_cdm_z0 = self.rho_m_z0 - self.rho_b_z0 # this part is super important for Bin Xia
         self.nH0 = (1. - self.Y) * self.rho_b_z0 / m_H
         self.nHe0 = self.y * self.nH0
         self.ne0 = self.nH0 + 2. * self.nHe0
