@@ -311,7 +311,7 @@ class ChemicalNetwork(object):
             dqdt['e'] -= y * x['he_3'] * self.alpha[cell,2] * n_e
 
         # Finish heating and cooling
-        print(__name__, 'self.isothermal =', self.isothermal, '| self.expansion =', self.expansion) # Xia
+        # print(__name__, 'self.isothermal =', self.isothermal, '| self.expansion =', self.expansion) # Xia
         if not self.isothermal:
             hubcool = 0.0
             compton = 0.0

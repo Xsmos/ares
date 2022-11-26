@@ -113,7 +113,7 @@ def MultiPhaseParameters():
      "cgm_expansion": True,
      "cgm_initial_temperature": [1e4],
      "cgm_initial_ionization": [1.-1e-8, 1e-8, 1.-2e-8, 1e-8, 1e-8],
-     "cgm_isothermal": True,
+     "cgm_isothermal": True,#False,# edited by Bin Xia
      "cgm_recombination": 'A',
      "cgm_collisional_ionization": False,
      "cgm_cosmological_ics": False,
@@ -198,7 +198,7 @@ def PhysicsParameters():
     "secondary_lya": False,     # Collisionally excited Lyman alpha?
 
     "dark_matter_heating": False, # added by Bin Xia
-    "isothermal": 1,
+    "isothermal": 1,# 0,#edited by Bin: no effect.
     "expansion": 0,             # Referring to cosmology
     "collapse": 0,              # Referring to single-zone collapse
     "compton_scattering": 1,

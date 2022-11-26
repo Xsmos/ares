@@ -201,8 +201,8 @@ def _sort_history(all_data, prefix='', squeeze=False):
     data = {}
     # print("all_data[0] =", all_data[0])
     # print("all_data[-1] =", all_data[-1])
-    # for key in all_data[0]:
-    for key in all_data[-1]: # modified by Bin Xia
+    for key in all_data[0]:
+    # for key in all_data[-1]: # modified by Bin Xia
         if type(key) is int and not prefix.strip():
             name = int(key)
         else:

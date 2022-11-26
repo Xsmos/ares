@@ -249,7 +249,7 @@ class Global21cm(AnalyzeGlobal21cm):
         self.all_t, self.all_z, self.all_data_igm, self.all_data_cgm, \
             self.all_RC_igm, self.all_RC_cgm = \
             self.medium.all_t, self.medium.all_z, self.medium.all_data_igm, \
-            self.medium.all_data_cgm, self.medium.all_RCs_igm, self.medium.all_RCs_cgm
+            self.medium.all_data_cgm, self.medium.all_RCs_igm, self.medium.all_RCs_cgm # Xia, super important
 
         # Add zeros for Ja
         for element in self.all_data_igm:

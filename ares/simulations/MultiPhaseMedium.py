@@ -472,7 +472,14 @@ class MultiPhaseMedium(object):
             Tk_inits = self.grid.cosm.thermal_history['Tk'][-1::-1]
             xe_inits = self.grid.cosm.thermal_history['xe'][-1::-1]
 
-        inits_all = {'z': z_inits, 'Tk': Tk_inits, 'xe': xe_inits}
+        if self.pf["dark_matter_heating"]:
+            Tchi_inits = np.ones(Tk_inits.size)*self.parcel_igm.grid.data["Tchi"]# added by Bin Xia
+            v_stream_inits = np.ones(Tk_inits.size)*self.parcel_igm.grid.data["v_stream"]# added by Bin Xia
+        else:
+            v_stream_inits = Tchi_inits = np.zeros(Tk_inits.size)
+
+        inits_all = {'z': z_inits, 'Tk': Tk_inits, 'xe': xe_inits,# originally stopped here
+        'Tchi': Tchi_inits, 'v_stream': v_stream_inits} # modified by Bin Xia, important and necessary here!
 
         # Stop pre-pending once we hit the first light redshift
         zi = self.pf['initial_redshift']
@@ -489,7 +496,7 @@ class MultiPhaseMedium(object):
 
         # Don't mess with the CGM (much)
         if self.pf['include_cgm']:
-            tmp = self.parcel_cgm.grid.data
+            tmp = self.parcel_cgm.grid.data#Xia, important
             self.all_data_cgm = [tmp.copy() for i in range(len(self.all_z))]
             for i, cgm_data in enumerate(self.all_data_cgm):
                 self.all_data_cgm[i]['rho'] = \
