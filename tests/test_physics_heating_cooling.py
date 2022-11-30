@@ -26,6 +26,7 @@ def test():
 
         # Set initial conditions
         grid.set_physics(isothermal=True)
+        
         grid.set_chemistry()
         grid.set_density(1)
         grid.set_ionization(x=[1. - 1e-8, 1e-8])

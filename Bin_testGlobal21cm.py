@@ -8,6 +8,5 @@ pf = \
     # 'isothermal': True, # Bin Xia wants False
     # 'expansion': False, # added by Bin Xia
 }
-
 sim = ares.simulations.Global21cm(**pf)
 sim.run()
