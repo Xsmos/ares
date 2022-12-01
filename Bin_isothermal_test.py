@@ -3,10 +3,10 @@ import ares
 import matplotlib.pyplot as pl
 
 ax = None
-for i, igm in enumerate([True, False]):
-    for j, cgm in enumerate([True, False]):
+for i, igm_isothermal in enumerate([False]):
+    for j, cgm_isothermal in enumerate([True, False]):
         sim = ares.simulations.Global21cm(
-            igm_isothermal=igm, cgm_isothermal=cgm, verbose=False, progress_bar=False
+            igm_isothermal=igm_isothermal, cgm_isothermal=cgm_isothermal, verbose=False, progress_bar=False
         )
         sim.run()
 
@@ -15,7 +15,7 @@ for i, igm in enumerate([True, False]):
             ax=ax,
             fig=3,
             z_ax=i == j == 0,
-            label="isothermal: igm={}, cgm={}".format(igm, cgm),
+            label="isothermal: igm={}, cgm={}".format(igm_isothermal, cgm_isothermal),
         )
 
 ax.legend()

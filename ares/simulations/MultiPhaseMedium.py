@@ -48,7 +48,7 @@ class MultiPhaseMedium(object):
     def pf(self):
         if not hasattr(self, '_pf'):
             
-            print("In {}, kwargs = {}".format(__name__, self.kwargs)) # added by Bin Xia
+            # print("In {}, kwargs = {}".format(__name__, self.kwargs)) # added by Bin Xia
 
             # dictBin = {'dark_matter_heating': True, "Bin_is_great": 1, 'isothermal': False} # added by Bin Xia
 
