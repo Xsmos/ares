@@ -1335,7 +1335,7 @@ def CosmologyParameters():
 
     # As you might have guessed, these parameters are all unique to CosmoRec
     'cosmorec_nz': 1000,
-    'cosmorec_z0': 3000,
+    'cosmorec_z0': 3000, # Xia important
     'cosmorec_zf': 0,
     'cosmorec_recfast_fudge': 1.14,
     'cosmorec_nshells_H': 3,
@@ -1387,7 +1387,7 @@ def ControlParameters():
     'logdzDataDump': None,
     "stop_time": 500,
 
-    "initial_redshift": 60.,
+    "initial_redshift": 60., # Xia important
     "final_redshift": 5,
     "fallback_dz": 0.1, # only used when no other constraints
     "kill_redshift": 0.0,

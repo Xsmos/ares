@@ -10,9 +10,10 @@ Description: ChemicalNetwork object just needs to have methods called
 'RateEquations' and 'Jacobian'
 
 """
-import ares.static.DarkMatterHeating as DarkMatterHeating # Bin Xia
+import ares.static.DarkMatterHeating as DarkMatterHeating  # Bin Xia
 
-import copy, sys
+import copy
+import sys
 import numpy as np
 from scipy.misc import derivative
 from ..util.Warnings import solver_error
@@ -23,9 +24,10 @@ import matplotlib.pyplot as pl
 
 rad_const = (8. * sigma_T / 3. / m_e / c)
 
+
 class ChemicalNetwork(object):
     def __init__(self, grid, rate_src='fk94', recombination='B',
-        interp_rc='linear'):
+                 interp_rc='linear'):
         """
         Initialize chemical network.
 
@@ -37,9 +39,9 @@ class ChemicalNetwork(object):
         self.cosm = self.grid.cosm
 
         self.coeff = RateCoefficients(grid, rate_src=rate_src,
-            recombination=recombination, interp_rc=interp_rc)
+                                      recombination=recombination, interp_rc=interp_rc)
 
-        self.dark_matter_heating = self.grid.dark_matter_heating # added by Bin Xia
+        self.dark_matter_heating = self.grid.dark_matter_heating  # added by Bin Xia
         self.isothermal = self.grid.isothermal
         self.secondary_ionization = self.grid.secondary_ionization
         self.lya_heating = self.grid.lya_heating
@@ -54,7 +56,7 @@ class ChemicalNetwork(object):
         self.neutrals = self.grid.neutrals
         self.expansion = self.grid.expansion
         self.exotic_heating = self.grid.exotic_heating
-        self.dark_matter_heating = self.grid.dark_matter_heating # added by Bin Xia
+        self.dark_matter_heating = self.grid.dark_matter_heating  # added by Bin Xia
         self.isothermal = self.grid.isothermal
         self.is_cgm_patch = self.grid.is_cgm_patch
         self.is_igm_patch = not self.grid.is_cgm_patch
@@ -72,7 +74,7 @@ class ChemicalNetwork(object):
         # Figure out mapping from q vector to things with names
         ##
         # added by Bin Xia
-        print('In {}, isothermal = {}, expansion = {}'.format(__name__, self.isothermal, self.expansion))
+        # print('In {}, isothermal = {}, expansion = {}'.format(__name__, self.isothermal, self.expansion))
         if self.dark_matter_heating:
             self.Nev_no_dm = self.Nev - 2
         else:
@@ -81,28 +83,31 @@ class ChemicalNetwork(object):
         # Hydrogen-only, isothermal
         if self.Nev_no_dm == 3:
             self._parse_q = lambda q, n_H: \
-                ({'h_1': q[0], 'h_2': q[1]}, {'h': n_H}, q[-1]  * n_H)#, q[2]  * n_H) # modified by Bin Xia
+                ({'h_1': q[0], 'h_2': q[1]}, {'h': n_H}, q[-1]
+                 * n_H)  # , q[2]  * n_H) # modified by Bin Xia
 
         # Hydrogen-only, non-isothermal
         elif self.Nev_no_dm == 4:
             self._parse_q = lambda q, n_H: \
-                ({'h_1': q[0], 'h_2': q[1]}, {'h': n_H}, q[-2]  * n_H)#, q[2]  * n_H) # modified by Bin Xia
+                ({'h_1': q[0], 'h_2': q[1]}, {'h': n_H}, q[-2]
+                 * n_H)  # , q[2]  * n_H) # modified by Bin Xia
 
         # Helium included, isothermal
         elif self.Nev_no_dm == 6:
             self._parse_q = lambda q, n_H: \
-                ({'h_1': q[0], 'h_2': q[1], 'he_1': q[2], 'he_2': q[3], \
-                    'he_3': q[4]}, {'h': n_H, 'he': self.y * n_H}, \
+                ({'h_1': q[0], 'h_2': q[1], 'he_1': q[2], 'he_2': q[3],
+                    'he_3': q[4]}, {'h': n_H, 'he': self.y * n_H},
                     q[-1] * n_H)
 
         # Helium included, non-isothermal
         elif self.Nev_no_dm == 7:
             self._parse_q = lambda q, n_H: \
-                ({'h_1': q[0], 'h_2': q[1], 'he_1': q[2], 'he_2': q[3], \
-                    'he_3': q[4]}, {'h': n_H, 'he': self.y * n_H}, \
+                ({'h_1': q[0], 'h_2': q[1], 'he_1': q[2], 'he_2': q[3],
+                    'he_3': q[4]}, {'h': n_H, 'he': self.y * n_H},
                     q[-2] * n_H)
         else:
-            print('#'*60, 'self.Nev_no_dm = ', self.Nev_no_dm) # added by Bin Xia
+            print('#'*60, 'self.Nev_no_dm = ',
+                  self.Nev_no_dm)  # added by Bin Xia
             raise ValueError('self.Nev_no_dm = ', self.Nev_no_dm)
 
     @property
@@ -134,7 +139,7 @@ class ChemicalNetwork(object):
             [cell #, ionization rate coefficient (IRC), secondary IRC,
              photo-heating rate coefficient, particle density, time]
         """
-        
+
         self.q = q
         cell, k_ion, k_ion2, k_heat, k_heat_lya, ntot, time = args
 
@@ -143,6 +148,8 @@ class ChemicalNetwork(object):
         #print('self.expansion =', self.expansion)
         if self.expansion:
             z = self.cosm.TimeToRedshiftConverter(0., time, self.grid.zi)
+            # if z > 58:#Xia
+            #     print(__name__, 'z =', z)
             n_H = self.cosm.nH(z)
             CF = self.grid.clumping_factor(z)
             #print('z, Tk: ', z, q[-1])
@@ -185,7 +192,7 @@ class ChemicalNetwork(object):
             omega = self.omega
 
         # Store results here
-        dqdt = {field:0.0 for field in self.grid.evolving_fields}
+        dqdt = {field: 0.0 for field in self.grid.evolving_fields}
 
         # Correct for H/He abundances
         acorr = {'h_1': 1., 'he_1': y, 'he_2': y}
@@ -199,16 +206,16 @@ class ChemicalNetwork(object):
             for j, donor in enumerate(self.absorbers):
                 elem = self.grid.parents_by_ion[donor]
 
-                term = k_ion2[0,j] * (x[donor] / x['h_1']) \
-                     * (acorr[donor] / acorr['h_1'])
+                term = k_ion2[0, j] * (x[donor] / x['h_1']) \
+                    * (acorr[donor] / acorr['h_1'])
                 gamma_HI += term
 
         ##
         # Hydrogen rate equations
         ##
-        dqdt['h_1'] = -(k_ion[0] + gamma_HI + self.Beta[cell,0] * n_e) \
-                      * x['h_1'] \
-                      + self.alpha[cell,0] * n_e * x['h_2'] * CF
+        dqdt['h_1'] = -(k_ion[0] + gamma_HI + self.Beta[cell, 0] * n_e) \
+            * x['h_1'] \
+            + self.alpha[cell, 0] * n_e * x['h_2'] * CF
         dqdt['h_2'] = -dqdt['h_1']
         # print("h_1 =", dqdt['h_1']) # added by Bin Xia
 
@@ -221,28 +228,29 @@ class ChemicalNetwork(object):
         heat = 0.0
         cool = 0.0
         if not self.isothermal:
-            self.Beta, self.alpha, self.zeta, self.eta, self.psi, self.xi, self.omega = self.SourceIndependentCoefficients(q[-1], z).values() # added by Bin Xia
+            self.Beta, self.alpha, self.zeta, self.eta, self.psi, self.xi, self.omega = self.SourceIndependentCoefficients(
+                q[-1], z).values()  # added by Bin Xia
             for i, sp in enumerate(self.neutrals):
                 elem = self.grid.parents_by_ion[sp]
 
                 heat += k_heat[i] * x[sp] * n[elem]          # photo-heating
 
-                cool += self.zeta[cell,i] * x[sp] * n[elem]  # ionization
-                cool += self.psi[cell,i] * x[sp] * n[elem]   # excitation
+                cool += self.zeta[cell, i] * x[sp] * n[elem]  # ionization
+                cool += self.psi[cell, i] * x[sp] * n[elem]   # excitation
 
                 #print("q[-1]={:.11f}, t={:15f}, z={}, self.zeta={}".format(q[-1], t, z, self.zeta[cell,i]))
-                
+
                 # with open("Bin_Tk.txt", 'a') as T_file:
                 #     T_file.write("{} ".format(q[-1]))
                 # with open("Bin_coolingRate.txt", 'a') as R_file:
                 #     R_file.write("{} ".format(self.zeta[cell,i] * x[sp] * n[elem]+self.psi[cell,i] * x[sp] * n[elem]))
                 # with open("Bin_z.txt", 'a') as z_file:
                 #     z_file.write("{} ".format(z))
-                
+
             for i, sp in enumerate(self.ions):
                 elem = self.grid.parents_by_ion[sp]
 
-                cool += self.eta[cell,i] * x[sp] * n[elem]   # recombination
+                cool += self.eta[cell, i] * x[sp] * n[elem]   # recombination
 
         ##
         # Helium processes
@@ -257,30 +265,30 @@ class ChemicalNetwork(object):
                 for j, donor in enumerate(self.absorbers):
                     elem = self.grid.parents_by_ion[donor]
 
-                    term1 = k_ion2[1,j] * (x[donor] / x['he_1']) \
-                          * (acorr[donor] / acorr['he_1'])
+                    term1 = k_ion2[1, j] * (x[donor] / x['he_1']) \
+                        * (acorr[donor] / acorr['he_1'])
                     gamma_HeI += term1
 
-                    term2 = k_ion2[2,j] * (x[donor] / x['he_2']) \
-                          * (acorr[donor] / acorr['he_2'])
+                    term2 = k_ion2[2, j] * (x[donor] / x['he_2']) \
+                        * (acorr[donor] / acorr['he_2'])
                     gamma_HeII += term2
 
             ##
             # Helium rate equations
             ##
             dqdt['he_1'] = \
-                - x['he_1'] * (k_ion[1] + gamma_HeI + self.Beta[cell,1] * n_e) \
-                + x['he_2'] * (self.alpha[cell,1] + xi[cell]) * n_e
+                - x['he_1'] * (k_ion[1] + gamma_HeI + self.Beta[cell, 1] * n_e) \
+                + x['he_2'] * (self.alpha[cell, 1] + xi[cell]) * n_e
 
             dqdt['he_2'] = \
-                  x['he_1'] * (k_ion[1] + gamma_HeI + self.Beta[cell,1] * n_e) \
-                - x['he_2'] * (k_ion[2] + gamma_HeII \
-                + (self.Beta[cell,2] + self.alpha[cell,1] + xi[cell]) * n_e) \
-                + x['he_3'] * self.alpha[cell,2] * n_e
+                x['he_1'] * (k_ion[1] + gamma_HeI + self.Beta[cell, 1] * n_e) \
+                - x['he_2'] * (k_ion[2] + gamma_HeII
+                               + (self.Beta[cell, 2] + self.alpha[cell, 1] + xi[cell]) * n_e) \
+                + x['he_3'] * self.alpha[cell, 2] * n_e
 
             dqdt['he_3'] = \
-                  x['he_2'] * (k_ion[2] + gamma_HeII + self.Beta[cell,2] * n_e) \
-                - x['he_3'] * self.alpha[cell,2] * n_e
+                x['he_2'] * (k_ion[2] + gamma_HeII + self.Beta[cell, 2] * n_e) \
+                - x['he_3'] * self.alpha[cell, 2] * n_e
 
             # Dielectronic recombination cooling
             if not self.isothermal:
@@ -297,18 +305,18 @@ class ChemicalNetwork(object):
         if self.include_He:
             # Gains from ionization of HeI
             dqdt['e'] += y * x['he_1'] \
-                * (k_ion[1] + gamma_HeI + self.Beta[cell,1] * n_e)
+                * (k_ion[1] + gamma_HeI + self.Beta[cell, 1] * n_e)
 
             # Gains from ionization of HeII
             dqdt['e'] += y * x['he_2'] \
-                * (k_ion[2] + gamma_HeII + self.Beta[cell,2] * n_e)
+                * (k_ion[2] + gamma_HeII + self.Beta[cell, 2] * n_e)
 
             # Losses from HeII recombinations
             dqdt['e'] -= y * x['he_2'] \
-                * (self.alpha[cell,1] + xi[cell]) * n_e
+                * (self.alpha[cell, 1] + xi[cell]) * n_e
 
             # Losses from HeIII recombinations
-            dqdt['e'] -= y * x['he_3'] * self.alpha[cell,2] * n_e
+            dqdt['e'] -= y * x['he_3'] * self.alpha[cell, 2] * n_e
 
         # Finish heating and cooling
         # print(__name__, 'self.isothermal =', self.isothermal, '| self.expansion =', self.expansion) # Xia, important
@@ -336,19 +344,24 @@ class ChemicalNetwork(object):
                 dqdt['Tk'] = (heat - n_e * cool) * to_temp + compton \
                     - hubcool - q[-1] * n_H * dqdt['e'] / ntot
                 #dqdt['Tk'] = compton - hubcool
-            
+
             # Add in charged-dark-matter cooling
-            ## added by Bin Xia
+            # added by Bin Xia
+            # if z > 59:# Xia
+            #     print('z =', z)
             if self.dark_matter_heating:
-                interaction = DarkMatterHeating.baryon_dark_matter_interaction(z, q[-1], q[-4], xe, q[-3])
+                interaction = DarkMatterHeating.baryon_dark_matter_interaction(
+                    z, q[-1], q[-4], xe, q[-3])
                 dqdt['Tk'] += interaction['baryon']*2/3
-                dqdt['Tchi'] = -2*self.cosm.HubbleParameter(z)*q[-4] + interaction['dark matter']*2/3
-                dqdt['v_stream'] = -self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
+                dqdt['Tchi'] = -2 * \
+                    self.cosm.HubbleParameter(
+                        z)*q[-4] + interaction['dark matter']*2/3
+                dqdt['v_stream'] = - \
+                    self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
                 # print('dvdt/v =', dqdt['v_stream']/q[-3])
             ##
         else:
             dqdt['Tk'] = 0.0
-
 
         ##
         # Add in Lyman-alpha heating.
@@ -376,17 +389,25 @@ class ChemicalNetwork(object):
             self.dqdt[i] = dqdt[sp]
 
         if np.isnan(self.dqdt).sum():
-            print('dqdt =', self.dqdt) # added by Bin Xia
-            err = 'NaN encountered in RateEquations! t={}, z={}'.format(time, z)
+            print('dqdt =', self.dqdt)  # added by Bin Xia
+            err = 'NaN encountered in RateEquations! t={}, z={}'.format(
+                time, z)
             raise ValueError(err)
+
+        t2time = lambda x, y : x/y if y != 0 else '1/0'
+        print('z =', z, 'xe =', q[1], 'dxedt =', self.dqdt[1], 't =', t)#, 'time =', time, 't/time =', t2time(t,time)) # added by Bin Xia
+        # with open('xe_data.txt', 'a') as f:# Xia
+        #     f.write(str(q[1]) + '\n')# Xia
+
         if (self.q < 0).sum():
-            print('q =', q) # added by Bin Xia
+            # print('self.q =', self.q)  # added by Bin Xia
+            # self.q = ( np.abs(self.q) + self.q ) / 2
             solver_error(self.grid, -1000, [self.q], [self.dqdt], -1000, cell, -1000)
             raise ValueError('Something < 0.')
 
         return self.dqdt
 
-    def Jacobian(self, t, q, args): # pragma: no cover
+    def Jacobian(self, t, q, args):  # pragma: no cover
         """
         Compute the Jacobian for the system of equations.
         """
@@ -449,8 +470,8 @@ class ChemicalNetwork(object):
 
             for j, donor in enumerate(self.absorbers):
                 elem = self.grid.parents_by_ion[donor]
-                term = k_ion2[0,j] * (x[donor] / x['h_1']) \
-                     * (acorr[donor] / acorr['h_1'])
+                term = k_ion2[0, j] * (x[donor] / x['h_1']) \
+                    * (acorr[donor] / acorr['h_1'])
                 gamma_HI += term
 
         ##
@@ -458,31 +479,31 @@ class ChemicalNetwork(object):
         ##
 
         # HI by HI
-        J[0,0] = -(k_ion[0] + gamma_HI + self.Beta[cell,0] * n_e)
+        J[0, 0] = -(k_ion[0] + gamma_HI + self.Beta[cell, 0] * n_e)
 
         # HI by HII
-        J[0,1] = self.alpha[cell,0] * n_e * CF
+        J[0, 1] = self.alpha[cell, 0] * n_e * CF
 
         # HII by HI
-        J[1,0] = -J[0,0]
+        J[1, 0] = -J[0, 0]
 
         # HII by HII
-        J[1,1] = -J[0,1]
+        J[1, 1] = -J[0, 1]
 
         ##
         # Hydrogen-Electron terms
         ##
 
-        J[0,e] = -self.Beta[cell,0] * x['h_1'] \
-               + self.alpha[cell,0] * x['h_2'] * CF
-        J[1,e] = -J[0,e]
-        J[e,e] = n_H * J[1,e]
+        J[0, e] = -self.Beta[cell, 0] * x['h_1'] \
+            + self.alpha[cell, 0] * x['h_2'] * CF
+        J[1, e] = -J[0, e]
+        J[e, e] = n_H * J[1, e]
 
-        J[e,0] = n_H * (k_ion[0]+ gamma_HI + self.Beta[cell,0] * n_e)
-        J[e,1] = -n_H * self.alpha[cell,0] * n_e * CF
+        J[e, 0] = n_H * (k_ion[0] + gamma_HI + self.Beta[cell, 0] * n_e)
+        J[e, 1] = -n_H * self.alpha[cell, 0] * n_e * CF
 
         ###
-        ## HELIUM INCLUDED CASES: N=6 (isothermal), N=7 (thermal evolution)
+        # HELIUM INCLUDED CASES: N=6 (isothermal), N=7 (thermal evolution)
         ###
         if self.Nev_no_dm in [6, 7]:
 
@@ -494,69 +515,70 @@ class ChemicalNetwork(object):
                 for j, donor in enumerate(self.absorbers):
                     elem = self.grid.parents_by_ion[donor]
 
-                    term1 = k_ion2[1,j] * (x[donor] / x['he_1']) \
-                          * (acorr[donor] / acorr['he_1'])
+                    term1 = k_ion2[1, j] * (x[donor] / x['he_1']) \
+                        * (acorr[donor] / acorr['he_1'])
                     gamma_HeI += term1
 
-                    term2 = k_ion2[2,j] * (x[donor] / x['he_2']) \
-                          * (acorr[donor] / acorr['he_2'])
+                    term2 = k_ion2[2, j] * (x[donor] / x['he_2']) \
+                        * (acorr[donor] / acorr['he_2'])
                     gamma_HeII += term2
 
             # HeI by HeI
-            J[2,2] = -(k_ion[1] + gamma_HeI + self.Beta[cell,1] * n_e)
+            J[2, 2] = -(k_ion[1] + gamma_HeI + self.Beta[cell, 1] * n_e)
 
             # HeI by HeII
-            J[2,3] = (self.alpha[cell,1] + xi[cell]) * n_e
+            J[2, 3] = (self.alpha[cell, 1] + xi[cell]) * n_e
 
             # HeI by HeIII
-            J[2,4] = 0.0
+            J[2, 4] = 0.0
 
             # HeII by HeI
-            J[3,2] = -J[2,2]
+            J[3, 2] = -J[2, 2]
 
             # HeII by HeII
-            J[3,3] = -(k_ion[2] + gamma_HeII) \
-                   - (self.Beta[cell,2] + self.alpha[cell,1] + xi[cell]) * n_e
+            J[3, 3] = -(k_ion[2] + gamma_HeII) \
+                - (self.Beta[cell, 2] + self.alpha[cell, 1] + xi[cell]) * n_e
 
             # HeII by HeIII
-            J[3,4] = self.alpha[cell,2] * n_e
+            J[3, 4] = self.alpha[cell, 2] * n_e
 
             # HeIII by HeI
-            J[4,2] = 0.0
+            J[4, 2] = 0.0
 
             # HeIII by HeII
-            J[4,3] = k_ion[2] + self.Beta[cell,2] * n_e
+            J[4, 3] = k_ion[2] + self.Beta[cell, 2] * n_e
 
             # HeIII by HeIII
-            J[4,4] = -self.alpha[cell,2] * n_e
+            J[4, 4] = -self.alpha[cell, 2] * n_e
 
             ##
             # Helium-Electron terms
             ##
 
-            J[2,e] = -self.Beta[cell,1] * x['he_1'] \
-                   + (self.alpha[cell,1] + xi[cell]) * x['he_2']
-            J[3,e] = self.Beta[cell,1] * x['he_1'] \
-                   - (self.Beta[cell,2] + self.alpha[cell,1] + xi[cell]) * x['he_2'] \
-                   + self.alpha[cell,2] * x['he_3']
-            J[4,e] = self.Beta[cell,2] * x['he_2'] - self.alpha[cell,2] * x['he_3']
+            J[2, e] = -self.Beta[cell, 1] * x['he_1'] \
+                + (self.alpha[cell, 1] + xi[cell]) * x['he_2']
+            J[3, e] = self.Beta[cell, 1] * x['he_1'] \
+                - (self.Beta[cell, 2] + self.alpha[cell, 1] + xi[cell]) * x['he_2'] \
+                + self.alpha[cell, 2] * x['he_3']
+            J[4, e] = self.Beta[cell, 2] * x['he_2'] - \
+                self.alpha[cell, 2] * x['he_3']
 
-            J[e,2] = n_He \
-                * (k_ion[1] + gamma_HeI + self.Beta[cell,1] * n_e)
+            J[e, 2] = n_He \
+                * (k_ion[1] + gamma_HeI + self.Beta[cell, 1] * n_e)
 
-            J[e,3] = n_He \
-                * ((k_ion[2] + gamma_HeII + self.Beta[cell,2] * n_e) \
-                - (self.alpha[cell,1] + xi[cell]) * n_e)
+            J[e, 3] = n_He \
+                * ((k_ion[2] + gamma_HeII + self.Beta[cell, 2] * n_e)
+                   - (self.alpha[cell, 1] + xi[cell]) * n_e)
 
-            J[e,4] = -n_He * self.alpha[cell,2] * n_e
+            J[e, 4] = -n_He * self.alpha[cell, 2] * n_e
 
             # Electron-electron terms (increment from H-only case)
-            J[e,e] += n_He * x['he_1'] * self.Beta[cell,1]
+            J[e, e] += n_He * x['he_1'] * self.Beta[cell, 1]
 
-            J[e,e] += n_He \
-                * (x['he_2'] \
-                * ((self.Beta[cell,2] - (self.alpha[cell,1] + xi[cell]))) \
-                - x['he_3'] * self.alpha[cell,2])
+            J[e, e] += n_He \
+                * (x['he_2']
+                   * ((self.Beta[cell, 2] - (self.alpha[cell, 1] + xi[cell])))
+                   - x['he_3'] * self.alpha[cell, 2])
 
         ##
         # Heating/Cooling from here onwards
@@ -569,42 +591,42 @@ class ChemicalNetwork(object):
         ##
 
         # HI by Tk
-        J[0,-1] = -n_e * x['h_1'] * self.dBeta[cell,0] \
-                +  n_e * x['h_2'] * self.dalpha[cell,0] * CF
+        J[0, -1] = -n_e * x['h_1'] * self.dBeta[cell, 0] \
+            + n_e * x['h_2'] * self.dalpha[cell, 0] * CF
         # HII by Tk
-        J[1,-1] = -J[0,-1]
+        J[1, -1] = -J[0, -1]
 
         ##
         # Helium derivatives wrt Tk
         ##
         if self.include_He:
             # HeI by Tk
-            J[2,-1] = -n_e * (x['he_1'] * self.dBeta[cell,1] \
-                    - x['he_2'] * (self.dalpha[cell,1] + dxi[cell]))
+            J[2, -1] = -n_e * (x['he_1'] * self.dBeta[cell, 1]
+                               - x['he_2'] * (self.dalpha[cell, 1] + dxi[cell]))
 
             # HeII by Tk
-            J[3,-1] = -n_e * (x['he_2'] * (self.dBeta[cell,2] \
-                    + self.dalpha[cell,1] + dxi[cell]) \
-                    - x['he_3'] * self.dalpha[cell,2])
+            J[3, -1] = -n_e * (x['he_2'] * (self.dBeta[cell, 2]
+                                            + self.dalpha[cell, 1] + dxi[cell])
+                               - x['he_3'] * self.dalpha[cell, 2])
 
             # HeIII by Tk
-            J[4,-1] = n_e * (x['he_2'] * self.dBeta[cell,2] \
-                - x['he_3'] * self.dalpha[cell,2])
+            J[4, -1] = n_e * (x['he_2'] * self.dBeta[cell, 2]
+                              - x['he_3'] * self.dalpha[cell, 2])
 
         ##
         # Electron by Tk terms
         ##
-        J[e,-1] = n_H * n_e \
-            * (x['h_1'] * self.dBeta[cell,0] - x['h_2'] * self.dalpha[cell,0] * CF)
+        J[e, -1] = n_H * n_e \
+            * (x['h_1'] * self.dBeta[cell, 0] - x['h_2'] * self.dalpha[cell, 0] * CF)
 
         ##
         # A few last Tk by Tk and Tk by electron terms (dielectronic recombination)
         ##
         if self.include_He:
-            J[e,-1] += n_He * n_e \
-                * (self.dBeta[cell,1] * x['he_1'] + self.dBeta[cell,2] * x['he_2'] \
-                - (self.dalpha[cell,1] + dxi[cell]) * x['he_2'] \
-                - self.dalpha[cell,2] * x['he_3'])
+            J[e, -1] += n_He * n_e \
+                * (self.dBeta[cell, 1] * x['he_1'] + self.dBeta[cell, 2] * x['he_2']
+                   - (self.dalpha[cell, 1] + dxi[cell]) * x['he_2']
+                   - self.dalpha[cell, 2] * x['he_3'])
 
         ##
         # Tk derivatives wrt neutrals
@@ -614,13 +636,13 @@ class ChemicalNetwork(object):
             elem = self.grid.parents_by_ion[sp]
 
             # Photo-heating
-            J[-1,j] += n[elem] * k_heat[i]
+            J[-1, j] += n[elem] * k_heat[i]
 
             # Collisional ionization cooling
-            J[-1,j] -= n[elem] * self.zeta[cell,i] * n_e
+            J[-1, j] -= n[elem] * self.zeta[cell, i] * n_e
 
             # Collisional excitation cooling
-            J[-1,j] -= n[elem] * self.psi[cell,i] * n_e
+            J[-1, j] -= n[elem] * self.psi[cell, i] * n_e
 
         ##
         # Tk derivatives wrt ions (only cooling terms)
@@ -630,61 +652,61 @@ class ChemicalNetwork(object):
             elem = self.grid.parents_by_ion[sp]
 
             # Recombination cooling
-            J[-1,j] -= n[elem] * self.eta[cell,i] * n_e
+            J[-1, j] -= n[elem] * self.eta[cell, i] * n_e
 
         # Dielectronic recombination term
         if self.include_He:
-            J[-1,3] -= n_He * omega[cell] * n_e
+            J[-1, 3] -= n_He * omega[cell] * n_e
 
         ##
         # Tk by Tk terms and Tk by electron terms
         ##
         for i, sp in enumerate(self.absorbers):
             elem = self.grid.parents_by_ion[sp]
-            J[-1,-1] -= n_e * n[elem] * x[sp] * self.dzeta[cell,i]
-            J[-1,-1] -= n_e * n[elem] * x[sp] * self.dpsi[cell,i]
+            J[-1, -1] -= n_e * n[elem] * x[sp] * self.dzeta[cell, i]
+            J[-1, -1] -= n_e * n[elem] * x[sp] * self.dpsi[cell, i]
 
-            J[-1,e] -= n[elem] * x[sp] * self.zeta[cell,i]
-            J[-1,e] -= n[elem] * x[sp] * self.psi[cell,i]
+            J[-1, e] -= n[elem] * x[sp] * self.zeta[cell, i]
+            J[-1, e] -= n[elem] * x[sp] * self.psi[cell, i]
 
         for i, sp in enumerate(self.ions):
             elem = self.grid.parents_by_ion[sp]
-            J[-1,-1] -= n_e * n[elem] * x[sp] * self.deta[cell,i]
+            J[-1, -1] -= n_e * n[elem] * x[sp] * self.deta[cell, i]
 
-            J[-1,e] -= n[elem] * x[sp] * self.eta[cell,i]
+            J[-1, e] -= n[elem] * x[sp] * self.eta[cell, i]
 
         # Dielectronic recombination term
         if self.include_He:
-            J[-1,e] -= omega[cell] * n_He * x['he_2']
-            J[-1,-1] -= n_e * x['he_2'] * n_He * self.domega[cell]
+            J[-1, e] -= omega[cell] * n_He * x['he_2']
+            J[-1, -1] -= n_e * x['he_2'] * n_He * self.domega[cell]
 
         # So far, everything in units of energy, must convert to temperature
-        J[-1,:] *= to_temp
+        J[-1, :] *= to_temp
 
         # Energy distributed among particles
-        J[-1,-1] -= n_H * self.dqdt[e] / ntot
+        J[-1, -1] -= n_H * self.dqdt[e] / ntot
 
         # Cosmological effects
-        if self.expansion: # This whole block should be inside `if not self.isothermal`, otherwise q[-1] is xe, instead of gas temperature. Bin Xia
+        # This whole block should be inside `if not self.isothermal`, otherwise q[-1] is xe, instead of gas temperature. Bin Xia
+        if self.expansion:
 
             # These terms have the correct units already
-            J[-1,-1] -= 2. * self.cosm.HubbleParameter(z)
+            J[-1, -1] -= 2. * self.cosm.HubbleParameter(z)
 
             if self.grid.compton_scattering:
                 Tcmb = self.cosm.TCMB(z)
                 ucmb = self.cosm.UCMB(z)
                 tcomp = 3. * m_e * c / (8. * sigma_T * ucmb)
 
-                J[-1,-1] -= q[-1] * xe \
+                J[-1, -1] -= q[-1] * xe \
                     / tcomp / (1. + self.y + xe)
-                J[-1,e] -= (Tcmb - q[-1]) * (1. + self.y) \
+                J[-1, e] -= (Tcmb - q[-1]) * (1. + self.y) \
                     / (1. + self.y + xe)**2 / tcomp
-
 
         # Add in any parametric modifications?
         if self.exotic_heating:
-            J[-1,-1] += derivative(self.grid._exotic_func(z=z) * to_temp, z,
-                dx=0.05)
+            J[-1, -1] += derivative(self.grid._exotic_func(z=z) * to_temp, z,
+                                    dx=0.05)
 
         return J
 
@@ -715,25 +737,30 @@ class ChemicalNetwork(object):
         for i, absorber in enumerate(self.absorbers):
 
             if self.collisional_ionization:
-                self.Beta[...,i] = self.coeff.CollisionalIonizationRate(i, T)
+                self.Beta[..., i] = self.coeff.CollisionalIonizationRate(i, T)
 
-            self.alpha[...,i] = self.coeff.RadiativeRecombinationRate(i, T)
+            self.alpha[..., i] = self.coeff.RadiativeRecombinationRate(i, T)
 
             if self.isothermal:
                 continue
 
-            self.dalpha[...,i] = self.coeff.dRadiativeRecombinationRate(i, T)
+            self.dalpha[..., i] = self.coeff.dRadiativeRecombinationRate(i, T)
 
             if self.collisional_ionization:
-                self.zeta[...,i] = self.coeff.CollisionalIonizationCoolingRate(i, T)
-                self.dzeta[...,i] = self.coeff.dCollisionalIonizationCoolingRate(i, T)
-                self.dBeta[...,i] = self.coeff.dCollisionalIonizationRate(i, T)
+                self.zeta[..., i] = self.coeff.CollisionalIonizationCoolingRate(
+                    i, T)
+                self.dzeta[..., i] = self.coeff.dCollisionalIonizationCoolingRate(
+                    i, T)
+                self.dBeta[..., i] = self.coeff.dCollisionalIonizationRate(
+                    i, T)
 
-            self.eta[...,i] = self.coeff.RecombinationCoolingRate(i, T)
-            self.psi[...,i] = self.coeff.CollisionalExcitationCoolingRate(i, T)
+            self.eta[..., i] = self.coeff.RecombinationCoolingRate(i, T)
+            self.psi[..., i] = self.coeff.CollisionalExcitationCoolingRate(
+                i, T)
 
-            self.deta[...,i] = self.coeff.dRecombinationCoolingRate(i, T)
-            self.dpsi[...,i] = self.coeff.dCollisionalExcitationCoolingRate(i, T)
+            self.deta[..., i] = self.coeff.dRecombinationCoolingRate(i, T)
+            self.dpsi[..., i] = self.coeff.dCollisionalExcitationCoolingRate(
+                i, T)
 
         # Di-electric recombination
         if self.include_He:
