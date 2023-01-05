@@ -16,7 +16,7 @@ plt.plot(sim.history['z'], sim.history['igm_Tk'],
 '''
 
 sim = ares.simulations.Global21cm(
-    verbose=False, dark_matter_heating=True, initial_redshift= 1100)#300.) #
+    verbose=False, dark_matter_heating=True, initial_redshift= 300.) #1100)#
 sim.run()
 # plt.plot(sim.history['z'], sim.history['Ts'],
 #          label='Ts', c='blue', linestyle='-')
