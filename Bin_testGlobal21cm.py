@@ -8,7 +8,7 @@ plt.plot(sim.history['z'], sim.history['dTb'], label='default')
 
 sim = ares.simulations.Global21cm(dark_matter_heating=True)
 sim.run()
-plt.plot(sim.history['z'], sim.history['dTb'], label='DM, z_initial = 60')
+plt.plot(sim.history['z'], sim.history['dTb'], label='DM, z_initial = 60', linestyle='--')
 
 sim = ares.simulations.Global21cm(dark_matter_heating=True, initial_redshift=300)
 sim.run()
