@@ -20,7 +20,7 @@ history_cgm_e = sim.history['cgm_e']
 
 
 sim = ares.simulations.Global21cm(
-    verbose=False, dark_matter_heating=True, initial_redshift= 300) #500)#
+    verbose=False, dark_matter_heating=True, initial_redshift= 1100) #500)#
 sim.run()
 # plt.plot(sim.history['z'], sim.history['Ts'],
 #          label='Ts', c='blue', linestyle='-')
