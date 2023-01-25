@@ -12,6 +12,7 @@ plt.plot(sim.history['z'], sim.history['igm_Tk'],
 history_z = sim.history['z']
 history_igm_e = sim.history['igm_e']
 history_cgm_e = sim.history['cgm_e']
+
 # plt.plot(sim.history['z'], sim.history['cgm_Tk'], label='cgm_Tk', c = 'black', linestyle = '-.')
 
 # if sim.pf["dark_matter_heating"]:
@@ -19,7 +20,7 @@ history_cgm_e = sim.history['cgm_e']
 
 
 sim = ares.simulations.Global21cm(
-    verbose=False, dark_matter_heating=True, initial_redshift= 500)#300.) #
+    verbose=False, dark_matter_heating=True, initial_redshift= 300) #500)#
 sim.run()
 # plt.plot(sim.history['z'], sim.history['Ts'],
 #          label='Ts', c='blue', linestyle='-')
