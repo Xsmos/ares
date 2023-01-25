@@ -106,8 +106,7 @@ class ChemicalNetwork(object):
                     'he_3': q[4]}, {'h': n_H, 'he': self.y * n_H},
                     q[-2] * n_H)
         else:
-            print('#'*60, 'self.Nev_no_dm = ',
-                  self.Nev_no_dm)  # added by Bin Xia
+            # print('#'*60, 'self.Nev_no_dm = ', self.Nev_no_dm)  # added by Bin Xia
             raise ValueError('self.Nev_no_dm = ', self.Nev_no_dm)
 
     @property
@@ -395,7 +394,7 @@ class ChemicalNetwork(object):
             raise ValueError(err)
 
         t2time = lambda x, y : x/y if y != 0 else '1/0'
-        print('z =', z, 'xe =', q[1], 'dxedt =', self.dqdt[1], 't =', t)#, 'time =', time, 't/time =', t2time(t,time)) # added by Bin Xia
+        # print('z =', z, 'xe =', q[1], 'dxedt =', self.dqdt[1], 't =', t)#, 'time =', time, 't/time =', t2time(t,time)) # added by Bin Xia
         # with open('xe_data.txt', 'a') as f:# Xia
         #     f.write(str(q[1]) + '\n')# Xia
 

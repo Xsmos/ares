@@ -127,7 +127,7 @@ class Chemistry(object):
 
             self.solver.set_initial_value(q, 0.0).set_f_params(args).set_jac_params(args)
 
-            print(__name__, 't =', t, 'dt =', dt, 't+dt =', t+dt, 'self.grid.isothermal =', self.grid.isothermal)
+            # print(__name__, 't =', t, 'dt =', dt, 't+dt =', t+dt, 'self.grid.isothermal =', self.grid.isothermal)
             self.solver.integrate(dt)
 
             self.q_grid[cell] = q.copy()
@@ -146,8 +146,8 @@ class Chemistry(object):
                 newdata['he_2'] = newdata['h_2']
                 newdata['he_3'] = np.zeros_like(newdata['h_1'])
 
-        print(__name__, 'newdata =', newdata)
-        print('----'*14, __name__, '----'*14)
+        # print(__name__, 'newdata =', newdata)
+        # print('----'*14, __name__, '----'*14)
 
         return newdata
 
