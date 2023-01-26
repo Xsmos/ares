@@ -112,7 +112,7 @@ def MultiPhaseParameters():
      "cgm_grid_cells": 1,
      "cgm_expansion": True,
      "cgm_initial_temperature": [1e4],
-    "cgm_initial_ionization": [1.-1e-8, 1e-8, 1.-2e-8, 1e-8, 1e-8],
+    "cgm_initial_ionization": [1.-1e-8, 1e-8, 1.-2e-8, 1e-8, 1e-8], # default
     # "cgm_initial_ionization": [1.-0.3, 0.3, 1.-2*0.3, 0.3, 0.3],
     # "cgm_initial_ionization": [1.-0.5, 0.5, 1.-2*0.5, 0.5, 0.5],
 
