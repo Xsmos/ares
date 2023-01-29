@@ -492,7 +492,7 @@ class Grid(object):
                 self.data[field] = np.zeros(self.dims)
                 
             if self.dark_matter_heating:
-                self.data['v_stream'] = np.ones(self.dims) # added by Bin Xia
+                self.data['v_stream'] = self.pf['initial_v_stream']*np.ones(self.dims) # added by Bin Xia
  
         self.abundances_by_number = self.abundances
         self.element_abundances = [1.0]

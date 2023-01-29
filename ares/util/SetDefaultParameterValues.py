@@ -1391,6 +1391,7 @@ def ControlParameters():
     'logdzDataDump': None,
     "stop_time": 500,
 
+    "initial_v_stream": 29e3, # 29 km/s
     "initial_redshift": 60., # Xia important
     "final_redshift": 5,
     "fallback_dz": 0.1, # only used when no other constraints

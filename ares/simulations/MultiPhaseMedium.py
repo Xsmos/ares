@@ -473,6 +473,8 @@ class MultiPhaseMedium(object):
             xe_inits = self.grid.cosm.thermal_history['xe'][-1::-1]
 
         if self.pf["dark_matter_heating"]:
+            # print("Tchi =", self.parcel_igm.grid.data["Tchi"])
+            # print("v_stream =", self.parcel_igm.grid.data["v_stream"])
             Tchi_inits = np.ones(Tk_inits.size)*self.parcel_igm.grid.data["Tchi"]# added by Bin Xia
             v_stream_inits = np.ones(Tk_inits.size)*self.parcel_igm.grid.data["v_stream"]# added by Bin Xia
         else:

@@ -357,7 +357,8 @@ class ChemicalNetwork(object):
                         z)*q[-4] + interaction['dark matter']*2/3
                 dqdt['v_stream'] = - \
                     self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
-                # print('dvdt/v =', dqdt['v_stream']/q[-3])
+                print('t =', t, 'v =', q[-3], 'D =', interaction['drag'])
+                # print('q =', q)
             ##
         else:
             dqdt['Tk'] = 0.0
@@ -397,12 +398,13 @@ class ChemicalNetwork(object):
         # print('z =', z, 'xe =', q[1], 'dxedt =', self.dqdt[1], 't =', t, 'time =', time)#, 't/time =', t2time(t,time)) # added by Bin Xia
         # with open('xe_data.txt', 'a') as f:# Xia
         #     f.write(str(q[1]) + '\n')# Xia
+        
 
-        if (self.q < 0).sum():
-            # print('self.q =', self.q)  # added by Bin Xia
-            # self.q = ( np.abs(self.q) + self.q ) / 2
-            solver_error(self.grid, -1000, [self.q], [self.dqdt], -1000, cell, -1000)
-            raise ValueError('Something < 0.')
+        # if (self.q < 0).sum():
+        #     # print('self.q =', self.q)  # added by Bin Xia
+        #     # self.q = ( np.abs(self.q) + self.q ) / 2
+        #     solver_error(self.grid, -1000, [self.q], [self.dqdt], -1000, cell, -1000)
+        #     raise ValueError('Something < 0.')
 
         return self.dqdt
 
