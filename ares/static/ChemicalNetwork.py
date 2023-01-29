@@ -357,7 +357,7 @@ class ChemicalNetwork(object):
                         z)*q[-4] + interaction['dark matter']*2/3
                 dqdt['v_stream'] = - \
                     self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
-                print('t =', t, 'v =', q[-3], 'D =', interaction['drag'])
+                # print(__name__, 'z =', z, 't =', t, 'v =', q[-3], 'D =', interaction['drag'])
                 # print('q =', q)
             ##
         else:
