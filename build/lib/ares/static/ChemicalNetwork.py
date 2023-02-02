@@ -10,7 +10,7 @@ Description: ChemicalNetwork object just needs to have methods called
 'RateEquations' and 'Jacobian'
 
 """
-import ares.static.DarkMatterHeating as DarkMatterHeating  # Bin Xia
+import ares.physics.DarkMatterHeating as DarkMatterHeating  # Bin Xia
 
 import copy
 import sys
