@@ -43,7 +43,12 @@ except ImportError:
 try:
     import h5py
 except ImportError:
+    print("h5py importation failed")#Bin Xia
     pass
+# else:
+#     print("h5py imported successfully.")
+
+# import h5py#Bin Xia
 
 try:
     from mpi4py import MPI

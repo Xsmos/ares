@@ -2,7 +2,8 @@ import ares
 import numpy as np
 import matplotlib.pyplot as plt
 
-sim = ares.simulations.Global21cm(radiative_transfer=False, verbose=False, dark_matter_heating=False)
+sim = ares.simulations.Global21cm(
+    radiative_transfer=False, verbose=False, dark_matter_heating=False)
 sim.run()
 plt.plot(1+sim.history['z'], sim.history['igm_Tk'],
          label='igm_Tk_default', linestyle='-', c='k')
@@ -12,7 +13,7 @@ history_igm_e = sim.history['igm_e']
 
 
 sim = ares.simulations.Global21cm(
-    radiative_transfer=False, verbose=False, dark_matter_heating=True, include_cgm=False, initial_v_stream = 1, initial_redshift=1010)#300)#
+    radiative_transfer=False, verbose=False, dark_matter_heating=True, include_cgm=False, initial_v_stream=0, initial_redshift=1010)  # 300)#
 sim.run()
 plt.plot(1+sim.history['z'], 2.73*(1+sim.history['z']),
          label='Tgamma', c='green', linestyle=':')
@@ -24,7 +25,7 @@ if sim.pf["dark_matter_heating"]:
 
 
 sim = ares.simulations.Global21cm(
-    radiative_transfer=False, verbose=False, dark_matter_heating=True, include_cgm=False, initial_v_stream = 29000, initial_redshift=1010)#300)#
+    radiative_transfer=False, verbose=False, dark_matter_heating=True, include_cgm=False, initial_v_stream=29000, initial_redshift=1010)  # 300)#
 sim.run()
 # plt.plot(1+sim.history['z'], 2.73*(1+sim.history['z']),
 #          label='Tgamma', c='green', linestyle=':')
@@ -40,9 +41,8 @@ plt.xlim(10, 1000)
 plt.ylim(1, 2000)
 plt.xscale("log")
 plt.yscale("log")
-plt.legend(loc = 'upper left')
+plt.legend(loc='upper left')
 plt.show()
-
 
 
 """ 

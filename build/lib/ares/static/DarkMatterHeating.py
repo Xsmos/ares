@@ -15,7 +15,7 @@ f_He = 0#0.08 # n_He/n_H
 m_chi = .1*Cs.giga*Cs.eV / Cs.c**2
 
 
-def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_temperature, electron_ratio, stream_velocity):
+def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_temperature, electron_fraction, stream_velocity):
     '''
     input: z, Tb, xe, Tchi, v_stream
     '''
@@ -25,9 +25,10 @@ def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_tem
     z = redshift
     Tb = baryon_temperature
     Tchi = dark_matter_temperature
-    xe = electron_ratio
+    xe = electron_fraction
     v_stream = stream_velocity
     
+    # print(__name__, z, Tb, Tchi, xe, v_stream)
     # if v_stream == 0:
     #     print('v_stream is 0!')
     # print(z, Tb, Tchi, xe, v_stream)
@@ -40,17 +41,29 @@ def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_tem
     return {'baryon': Q_b_rate, 'dark matter': Q_chi_rate, 'drag': Drag}
 
 def Q_chi_from(m_t):
-    Q_chi = n_H()*(1/(1+f_He))*(m_chi*m_t/(m_chi + m_t)**2)*(sigma_t_mean_0(m_t)/u_th(m_t))*(np.sqrt(2/np.pi)*(np.exp(-r_t(m_t)**2 /2)/u_th(m_t)**2)*Cs.k*(Tb - Tchi) + m_t*F(r_t(m_t))/r_t(m_t)) * Cs.c**4 / Cs.k #* 10**18
+    if v_stream == 0:
+        mt_Frt2rt = 0
+    else:
+        mt_Frt2rt = m_t*F(r_t(m_t))/r_t(m_t)
+    Q_chi = n_H()*(1/(1+f_He))*(m_chi*m_t/(m_chi + m_t)**2)*(sigma_t_mean_0(m_t)/u_th(m_t))*(np.sqrt(2/np.pi)*(np.exp(-r_t(m_t)**2 /2)/u_th(m_t)**2)*Cs.k*(Tb - Tchi) + mt_Frt2rt) * Cs.c**4 / Cs.k #* 10**18
     return Q_chi
 
 def Q_b_from(m_t):
-    Q_b = n_chi()*(1/(1+f_He))*(m_chi*m_t/(m_chi + m_t)**2)*(sigma_t_mean_0(m_t)/u_th(m_t))*(np.sqrt(2/np.pi)*(np.exp(-r_t(m_t)**2 /2)/u_th(m_t)**2)*Cs.k*(Tchi - Tb) + m_chi*F(r_t(m_t))/r_t(m_t)) * Cs.c**4 / Cs.k
+    if v_stream == 0:
+        mchi_Frt2rt = 0
+    else:
+        mchi_Frt2rt = m_chi*F(r_t(m_t))/r_t(m_t)
+    Q_b = n_chi()*(1/(1+f_He))*(m_chi*m_t/(m_chi + m_t)**2)*(sigma_t_mean_0(m_t)/u_th(m_t))*(np.sqrt(2/np.pi)*(np.exp(-r_t(m_t)**2 /2)/u_th(m_t)**2)*Cs.k*(Tchi - Tb) + mchi_Frt2rt) * Cs.c**4 / Cs.k
     return Q_b
 
 def Drag_from(m_t):
-    Drag = Cs.c**4 * sigma_t_mean_0(m_t)*((m_chi*n_chi()+rho_b())/(m_chi+m_t))*((m_t*n_H())/(rho_b()))*(F(r_t(m_t))/v_stream**2)
-    #print(v_stream)
-    return Drag
+    if v_stream == 0:
+        # print(__name__, 'v_stream =', v_stream)
+        return 0
+    else:
+        Drag = Cs.c**4 * sigma_t_mean_0(m_t)*((m_chi*n_chi()+rho_b())/(m_chi+m_t))*((m_t*n_H())/(rho_b()))*(F(r_t(m_t))/v_stream**2)
+        # print(__name__, 'v_stream =', v_stream)
+        return Drag
 
 def D():
     D = Drag_from(Cs.m_p)# + Drag_from(Cs.m_e)

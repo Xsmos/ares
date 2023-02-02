@@ -106,8 +106,7 @@ class ChemicalNetwork(object):
                     'he_3': q[4]}, {'h': n_H, 'he': self.y * n_H},
                     q[-2] * n_H)
         else:
-            print('#'*60, 'self.Nev_no_dm = ',
-                  self.Nev_no_dm)  # added by Bin Xia
+            # print('#'*60, 'self.Nev_no_dm = ', self.Nev_no_dm)  # added by Bin Xia
             raise ValueError('self.Nev_no_dm = ', self.Nev_no_dm)
 
     @property
@@ -350,15 +349,38 @@ class ChemicalNetwork(object):
             # if z > 59:# Xia
             #     print('z =', z)
             if self.dark_matter_heating:
-                interaction = DarkMatterHeating.baryon_dark_matter_interaction(
-                    z, q[-1], q[-4], xe, q[-3])
+                # z = 404.5000000005507
+                # Tk = 1089.184155018262
+                # Tchi = 4.9441439895944095
+                # xe = 0.0009684253634894803
+                # v_chi_b = 5260.93867634403
+                # interaction = DarkMatterHeating.baryon_dark_matter_interaction(z, Tk, Tchi, xe, v_chi_b)
+                # dqdt['Tk'] += interaction['baryon']*2/3
+                # dqdt['Tchi'] = -2 * self.cosm.HubbleParameter(z)*Tchi + interaction['dark matter']*2/3
+                # dqdt['v_stream'] = - self.cosm.HubbleParameter(z)*v_chi_b - interaction['drag']
+                # print(dqdt)
+                # print(interaction)
+                # raise ValueError("Good to stop here.")
+
+                # print(__name__, 'z =', z, 'v_stream =', q[-3], 't =', t)
+                interaction = DarkMatterHeating.baryon_dark_matter_interaction(z, q[-1], q[-4], xe, q[-3])
                 dqdt['Tk'] += interaction['baryon']*2/3
                 dqdt['Tchi'] = -2 * \
-                    self.cosm.HubbleParameter(
-                        z)*q[-4] + interaction['dark matter']*2/3
+                    self.cosm.HubbleParameter(z)*q[-4] + interaction['dark matter']*2/3
                 dqdt['v_stream'] = - \
                     self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
-                # print('dvdt/v =', dqdt['v_stream']/q[-3])
+                # if self.grid.pf['initial_v_stream'] == 29000/2:
+                #     print(__name__, 'z =', z, 't =', t, 'v =', q[-3], 'D =', interaction['drag'])
+                # print('q =', q)
+
+                # if 395 < int(z) < 405:
+                #     print('initial_v_stream =', self.grid.pf['initial_v_stream'])
+                #     print('z =', z)
+                #     print('dTkdt =', dqdt['Tk'])
+                #     print('dTchidt =', dqdt['Tchi'])
+                #     print('dvdt =', dqdt['v_stream'])
+                #     print(interaction)
+                #     print('---'*10)
             ##
         else:
             dqdt['Tk'] = 0.0
@@ -394,17 +416,17 @@ class ChemicalNetwork(object):
                 time, z)
             raise ValueError(err)
 
-        t2time = lambda x, y : x/y if y != 0 else '1/0'
-        print(__name__, 'z =', z, 'xe =', q[1], 'dxedt =', self.dqdt[1], 't =', t)#, 'time =', time, 't/time =', t2time(t,time)) # added by Bin Xia
-
+        # t2time = lambda x, y : x/y if y != 0 else '1/0'
+        # print('z =', z, 'xe =', q[1], 'dxedt =', self.dqdt[1], 't =', t, 'time =', time)#, 't/time =', t2time(t,time)) # added by Bin Xia
         # with open('xe_data.txt', 'a') as f:# Xia
         #     f.write(str(q[1]) + '\n')# Xia
+        
 
-        if (self.q < 0).sum():
-            # print('self.q =', self.q)  # added by Bin Xia
-            # self.q = ( np.abs(self.q) + self.q ) / 2
-            solver_error(self.grid, -1000, [self.q], [self.dqdt], -1000, cell, -1000)
-            raise ValueError('Something < 0.')
+        # if (self.q < 0).sum():
+        #     # print('self.q =', self.q)  # added by Bin Xia
+        #     # self.q = ( np.abs(self.q) + self.q ) / 2
+        #     solver_error(self.grid, -1000, [self.q], [self.dqdt], -1000, cell, -1000)
+        #     raise ValueError('Something < 0.')
 
         return self.dqdt
 

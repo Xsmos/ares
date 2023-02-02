@@ -112,7 +112,11 @@ def MultiPhaseParameters():
      "cgm_grid_cells": 1,
      "cgm_expansion": True,
      "cgm_initial_temperature": [1e4],
-     "cgm_initial_ionization": [1.-1e-8, 1e-8, 1.-2e-8, 1e-8, 1e-8],
+    "cgm_initial_ionization": [1.-1e-8, 1e-8, 1.-2e-8, 1e-8, 1e-8], # default
+    # "cgm_initial_ionization": [1.-0.3, 0.3, 1.-2*0.3, 0.3, 0.3],
+    # "cgm_initial_ionization": [1.-0.5, 0.5, 1.-2*0.5, 0.5, 0.5],
+
+
      "cgm_isothermal": True,#False,# edited by Bin Xia
      "cgm_recombination": 'A',
      "cgm_collisional_ionization": False,
@@ -1387,6 +1391,7 @@ def ControlParameters():
     'logdzDataDump': None,
     "stop_time": 500,
 
+    "initial_v_stream": 29e3, # 29 km/s
     "initial_redshift": 60., # Xia important
     "final_redshift": 5,
     "fallback_dz": 0.1, # only used when no other constraints

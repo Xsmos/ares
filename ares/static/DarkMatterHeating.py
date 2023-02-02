@@ -28,6 +28,7 @@ def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_tem
     xe = electron_fraction
     v_stream = stream_velocity
     
+    # print(__name__, z, Tb, Tchi, xe, v_stream)
     # if v_stream == 0:
     #     print('v_stream is 0!')
     # print(z, Tb, Tchi, xe, v_stream)
@@ -41,10 +42,10 @@ def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_tem
 
 def Q_chi_from(m_t):
     if v_stream == 0:
-        mchi_Frt2rt = 0
+        mt_Frt2rt = 0
     else:
-        mchi_Frt2rt = m_chi*F(r_t(m_t))/r_t(m_t)
-    Q_chi = n_H()*(1/(1+f_He))*(m_chi*m_t/(m_chi + m_t)**2)*(sigma_t_mean_0(m_t)/u_th(m_t))*(np.sqrt(2/np.pi)*(np.exp(-r_t(m_t)**2 /2)/u_th(m_t)**2)*Cs.k*(Tb - Tchi) + mchi_Frt2rt) * Cs.c**4 / Cs.k #* 10**18
+        mt_Frt2rt = m_t*F(r_t(m_t))/r_t(m_t)
+    Q_chi = n_H()*(1/(1+f_He))*(m_chi*m_t/(m_chi + m_t)**2)*(sigma_t_mean_0(m_t)/u_th(m_t))*(np.sqrt(2/np.pi)*(np.exp(-r_t(m_t)**2 /2)/u_th(m_t)**2)*Cs.k*(Tb - Tchi) + mt_Frt2rt) * Cs.c**4 / Cs.k #* 10**18
     return Q_chi
 
 def Q_b_from(m_t):

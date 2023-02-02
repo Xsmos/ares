@@ -1,6 +1,7 @@
-# test the effect of isothermal for igm and cgm.
+# test the effect of isothermal for igm and cgm. test batcat
 import ares
 import matplotlib.pyplot as pl
+import numpy as np
 
 ax = None
 for i, igm_isothermal in enumerate([False]):
@@ -19,5 +20,4 @@ for i, igm_isothermal in enumerate([False]):
         )
 
 ax.legend()
-
 pl.show()
