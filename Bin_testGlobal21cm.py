@@ -2,7 +2,7 @@ import ares
 import numpy as np
 import matplotlib.pyplot as plt
 
-sim = ares.simulations.Global21cm(radiative_transfer=False, verbose=False, dark_matter_heating=False, include_cgm=False)
+sim = ares.simulations.Global21cm(radiative_transfer=False, verbose=False, dark_matter_heating=False, include_cgm=False, initial_redshift=1010)
 sim.run()
 plt.plot(1+sim.history['z'], sim.history['dTb'],
              label=r'DM, $V{\chi b,0}=$'+'{}m/s'.format(sim.pf['initial_v_stream']), c='k', linestyle='-')

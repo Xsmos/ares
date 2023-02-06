@@ -369,7 +369,7 @@ class ChemicalNetwork(object):
                 dqdt['v_stream'] = - \
                     self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
 
-                print(__name__, 'z =', z, 't =', t, 'v =', q[-3], 'D =', interaction['drag'])
+                # print(__name__, 'z =', z, 't =', t, 'v =', q[-3], 'D =', interaction['drag'], 'H =', self.cosm.HubbleParameter(z))
 
                 # if self.grid.pf['initial_v_stream'] == 29000/2:
                 #     print(__name__, 'z =', z, 't =', t, 'v =', q[-3], 'D =', interaction['drag'])
