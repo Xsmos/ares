@@ -215,6 +215,7 @@ class ChemicalNetwork(object):
         dqdt['h_1'] = -(k_ion[0] + gamma_HI + self.Beta[cell, 0] * n_e) \
             * x['h_1'] \
             + self.alpha[cell, 0] * n_e * x['h_2'] * CF
+        # print("dqdt['h_1'] =", dqdt['h_1'])
         dqdt['h_2'] = -dqdt['h_1']
         # print("h_1 =", dqdt['h_1']) # added by Bin Xia
 
@@ -227,8 +228,7 @@ class ChemicalNetwork(object):
         heat = 0.0
         cool = 0.0
         if not self.isothermal:
-            self.Beta, self.alpha, self.zeta, self.eta, self.psi, self.xi, self.omega = self.SourceIndependentCoefficients(
-                q[-1], z).values()  # added by Bin Xia
+            # self.Beta, self.alpha, self.zeta, self.eta, self.psi, self.xi, self.omega = self.SourceIndependentCoefficients(q[-1], z).values()  # added by Bin Xia
             for i, sp in enumerate(self.neutrals):
                 elem = self.grid.parents_by_ion[sp]
 
@@ -236,15 +236,6 @@ class ChemicalNetwork(object):
 
                 cool += self.zeta[cell, i] * x[sp] * n[elem]  # ionization
                 cool += self.psi[cell, i] * x[sp] * n[elem]   # excitation
-
-                #print("q[-1]={:.11f}, t={:15f}, z={}, self.zeta={}".format(q[-1], t, z, self.zeta[cell,i]))
-
-                # with open("Bin_Tk.txt", 'a') as T_file:
-                #     T_file.write("{} ".format(q[-1]))
-                # with open("Bin_coolingRate.txt", 'a') as R_file:
-                #     R_file.write("{} ".format(self.zeta[cell,i] * x[sp] * n[elem]+self.psi[cell,i] * x[sp] * n[elem]))
-                # with open("Bin_z.txt", 'a') as z_file:
-                #     z_file.write("{} ".format(z))
 
             for i, sp in enumerate(self.ions):
                 elem = self.grid.parents_by_ion[sp]
@@ -342,7 +333,7 @@ class ChemicalNetwork(object):
             else:
                 dqdt['Tk'] = (heat - n_e * cool) * to_temp + compton \
                     - hubcool - q[-1] * n_H * dqdt['e'] / ntot
-                #dqdt['Tk'] = compton - hubcool
+                # dqdt['Tk'] = compton - hubcool
 
             # Add in charged-dark-matter cooling
             # added by Bin Xia
@@ -424,11 +415,11 @@ class ChemicalNetwork(object):
         #     f.write(str(q[1]) + '\n')# Xia
         
 
-        # if (self.q < 0).sum():
-        #     # print('self.q =', self.q)  # added by Bin Xia
-        #     # self.q = ( np.abs(self.q) + self.q ) / 2
-        #     solver_error(self.grid, -1000, [self.q], [self.dqdt], -1000, cell, -1000)
-        #     raise ValueError('Something < 0.')
+        if (self.q < 0).sum():
+            # print('self.q =', self.q)  # added by Bin Xia
+            # self.q = ( np.abs(self.q) + self.q ) / 2
+            solver_error(self.grid, -1000, [self.q], [self.dqdt], -1000, cell, -1000)
+            raise ValueError('Something < 0.')
 
         return self.dqdt
 

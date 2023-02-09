@@ -9,15 +9,15 @@ z1010 = ares.simulations.Global21cm(
 z60.run()
 z1010.run()
 
-plt.plot(z60.history['z'], z60.history['dTb'])
-plt.plot(z1010.history['z'], z1010.history['dTb'])
+plt.plot(z60.history['z'], z60.history['igm_e'])
+plt.plot(z1010.history['z'], z1010.history['igm_e'])
 
-plt.xlim(0, 300)
-plt.ylim(-60, 0)
+# plt.xlim(0,300)
+# plt.ylim(-60,0)
 
-plt.xlabel('z')
-plt.ylabel('dTb [mK]')
+# plt.xlabel('z')
+# plt.ylabel('dTb [mK]')
 
-# plt.xscale('log')
-# plt.yscale('log')
+plt.xscale('log')
+plt.yscale('log')
 plt.show()
