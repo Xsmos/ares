@@ -151,6 +151,7 @@ class ChemicalNetwork(object):
             #     print(__name__, 'z =', z)
             n_H = self.cosm.nH(z)
             CF = self.grid.clumping_factor(z)
+            print(__name__, "CF =", CF)
             #print('z, Tk: ', z, q[-1])
         else:
             n_H = self.grid.n_H[cell]
@@ -212,10 +213,15 @@ class ChemicalNetwork(object):
         ##
         # Hydrogen rate equations
         ##
-        dqdt['h_1'] = -(k_ion[0] + gamma_HI + self.Beta[cell, 0] * n_e) \
-            * x['h_1'] \
-            + self.alpha[cell, 0] * n_e * x['h_2'] * CF
+        # if q[-1] > 2500:
+        #     dqdt['h_1'] = 0
+        # else:
+        #     dqdt['h_1'] = -(k_ion[0] + gamma_HI + self.Beta[cell, 0] * n_e) * x['h_1'] + self.alpha[cell, 0] * n_e * x['h_2'] * CF 
+        
+        dqdt['h_1'] = -(k_ion[0] + gamma_HI + self.Beta[cell, 0] * n_e) * x['h_1']\
+              + self.alpha[cell, 0] * n_e * x['h_2'] * CF 
         # print("dqdt['h_1'] =", dqdt['h_1'])
+        # print("CF =", CF)
         dqdt['h_2'] = -dqdt['h_1']
         # print("h_1 =", dqdt['h_1']) # added by Bin Xia
 
