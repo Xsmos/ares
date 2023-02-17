@@ -25,6 +25,32 @@ import matplotlib.pyplot as pl
 rad_const = (8. * sigma_T / 3. / m_e / c)
 
 
+# Bin's code for calculate dxedt
+import scipy.constants as Cs
+
+E_0 = -2.1789602e-18 # J; -13.6 eV
+Lambda_2s_1s = 8.227 # sec**-1, peebles 1968 Eq.27
+lambda_alpha = 1.21267e-7 # m
+
+def Peebles_C_factor(z, n_H, H, xe, Tcmb):
+    'refer to eq. 11 of paper E:/papers/PhysRevD.83.043513.pdf or http://dx.doi.org/10.1103/PhysRevD.83.043513'
+    # H = Hubble_parameter(z)
+    R_Ly_alpha = (8*np.pi*H)/(3*n_H*(1-xe)*lambda_alpha**3)
+    C = (3*R_Ly_alpha+Lambda_2s_1s)/(3*R_Ly_alpha+Lambda_2s_1s+4*B_B(z, Tcmb))
+    #print(C)
+    return C
+
+def A_B(z, Tcmb):
+    'effective case B recombination coefficient; unit: m^3 sec^-1'
+    A_B = 2.84e-19 / np.sqrt(Tcmb*1e-4) # m^3/s; 2.84*10**-13 / np.sqrt(Tcmb*1e-4) # Peebles 1968
+    return A_B
+
+def B_B(z, Tcmb):
+    #B_B = A_B(z)*np.exp(E_0/(4*Cs.k*Tcmb))*(2*np.pi*m_e*Cs.k*Tcmb)**1.5 / Cs.h**3
+    B_B = A_B(z, Tcmb)*np.exp(E_0/(4*Cs.k*Tcmb))*0.25*(2*np.pi*(m_e*Cs.m_p/(m_e+Cs.m_p))*Cs.k*Tcmb)**1.5 / Cs.h**3
+    return B_B
+
+
 class ChemicalNetwork(object):
     def __init__(self, grid, rate_src='fk94', recombination='B',
                  interp_rc='linear'):
@@ -151,7 +177,7 @@ class ChemicalNetwork(object):
             #     print(__name__, 'z =', z)
             n_H = self.cosm.nH(z)
             CF = self.grid.clumping_factor(z)
-            print(__name__, "CF =", CF)
+            # print(__name__, "CF =", CF)
             #print('z, Tk: ', z, q[-1])
         else:
             n_H = self.grid.n_H[cell]
@@ -295,7 +321,14 @@ class ChemicalNetwork(object):
         ##
 
         # Gains from ionizations of HI
-        dqdt['e'] = 1. * dqdt['h_2']
+        Tcmb = self.cosm.TCMB(z)
+        H = self.cosm.HubbleParameter(z)
+        if 60 < z < 1010:
+            # print('Cs.k =', Cs.k, 'K_B', k_B)
+            dqdt['e'] = -Peebles_C_factor(z, n_H, H, xe, Tcmb)*(n_H*A_B(z, Tcmb)*xe**2-4*(1-xe)*B_B(z, Tcmb)*np.exp(3*E_0/(4*Cs.k*Tcmb)))
+            print(__name__, 'z =', z, 'xe =', xe, 'dxedt =', dqdt['e'])
+        else:
+            dqdt['e'] = 1. * dqdt['h_2']
 
         # Electrons from helium ionizations
         if self.include_He:
@@ -421,11 +454,11 @@ class ChemicalNetwork(object):
         #     f.write(str(q[1]) + '\n')# Xia
         
 
-        if (self.q < 0).sum():
-            # print('self.q =', self.q)  # added by Bin Xia
-            # self.q = ( np.abs(self.q) + self.q ) / 2
-            solver_error(self.grid, -1000, [self.q], [self.dqdt], -1000, cell, -1000)
-            raise ValueError('Something < 0.')
+        # if (self.q < 0).sum():
+        #     # print('self.q =', self.q)  # added by Bin Xia
+        #     # self.q = ( np.abs(self.q) + self.q ) / 2
+        #     solver_error(self.grid, -1000, [self.q], [self.dqdt], -1000, cell, -1000)
+        #     raise ValueError('Something < 0.')
 
         return self.dqdt
 
