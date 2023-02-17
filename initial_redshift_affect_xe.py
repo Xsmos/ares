@@ -9,8 +9,8 @@ z1010 = ares.simulations.Global21cm(
 z60.run()
 z1010.run()
 
-plt.plot(z60.history['z'], z60.history['igm_e'])
-plt.plot(z1010.history['z'], z1010.history['igm_e'])
+plt.plot(z60.history['z'], z60.history['igm_e'], label='initial_redshift = {}'.format(z60.pf['initial_redshift']))
+plt.plot(z1010.history['z'], z1010.history['igm_e'], label='initial_redshift = {}'.format(z1010.pf['initial_redshift']), linestyle='--')
 
 # plt.xlim(0,300)
 # plt.ylim(-60,0)
@@ -20,4 +20,5 @@ plt.plot(z1010.history['z'], z1010.history['igm_e'])
 
 # plt.xscale('log')
 # plt.yscale('log')
+plt.legend()
 plt.show()

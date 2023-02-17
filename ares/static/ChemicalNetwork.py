@@ -37,7 +37,7 @@ def Peebles_C_factor(z, n_H, H, xe, Tcmb):
     # H = Hubble_parameter(z)
     R_Ly_alpha = (8*np.pi*H)/(3*n_H*(1-xe)*lambda_alpha**3)
     C = (3*R_Ly_alpha+Lambda_2s_1s)/(3*R_Ly_alpha+Lambda_2s_1s+4*B_B(z, Tcmb))
-    #print(C)
+    # print('Peebles_C =', C)
     return C
 
 def A_B(z, Tcmb):
@@ -46,8 +46,8 @@ def A_B(z, Tcmb):
     return A_B
 
 def B_B(z, Tcmb):
-    #B_B = A_B(z)*np.exp(E_0/(4*Cs.k*Tcmb))*(2*np.pi*m_e*Cs.k*Tcmb)**1.5 / Cs.h**3
-    B_B = A_B(z, Tcmb)*np.exp(E_0/(4*Cs.k*Tcmb))*0.25*(2*np.pi*(m_e*Cs.m_p/(m_e+Cs.m_p))*Cs.k*Tcmb)**1.5 / Cs.h**3
+    #B_B = A_B(z)*np.exp(E_0/(4*Cs.k*Tcmb))*(2*np.pi*Cs.m_e*Cs.k*Tcmb)**1.5 / Cs.h**3
+    B_B = A_B(z, Tcmb)*np.exp(E_0/(4*Cs.k*Tcmb))*0.25*(2*np.pi*(Cs.m_e*Cs.m_p/(Cs.m_e+Cs.m_p))*Cs.k*Tcmb)**1.5 / Cs.h**3
     return B_B
 
 
@@ -321,16 +321,22 @@ class ChemicalNetwork(object):
         ##
 
         # Gains from ionizations of HI
-        # Tcmb = self.cosm.TCMB(z)
-        # H = self.cosm.HubbleParameter(z)
-        # if 60 < z < 1010:
-        #     # print('Cs.k =', Cs.k, 'K_B', k_B)
-        #     dqdt['e'] = -Peebles_C_factor(z, n_H, H, xe, Tcmb)*(n_H*A_B(z, Tcmb)*xe**2-4*(1-xe)*B_B(z, Tcmb)*np.exp(3*E_0/(4*Cs.k*Tcmb)))
-        #     print(__name__, 'z =', z, 'xe =', xe, 'dxedt =', dqdt['e'])
-        # else:
-        #     dqdt['e'] = 1. * dqdt['h_2']
+        Tcmb = self.cosm.TCMB(z)
+        H = self.cosm.HubbleParameter(z)
+        if 60 < z < self.grid.pf['initial_redshift']:
+            '''
+            This part is in S.I. unit
+            '''
+            # print('Cs.k =', Cs.k, 'K_B', k_B)
+            dqdt['e'] = -Peebles_C_factor(z, n_H*1e6, H, xe, Tcmb)*(n_H*1e6*A_B(z, Tcmb)*xe**2-4*(1-xe)*B_B(z, Tcmb)*np.exp(3*E_0/(4*Cs.k*Tcmb)))
+            # print(__name__,'\nz=', z,'\nn_H=', n_H*1e6,'\nH=', H,'\nxe=', xe,'\nTcmb=', Tcmb,'\ndxedt =', dqdt['e'])
+            # print("A_B(z)=", A_B(z, Tcmb))
+            # print("B_B(z)=", B_B(z, Tcmb))    
+            # print('---'*10)
+        else:
+            dqdt['e'] = 1. * dqdt['h_2']
 
-        dqdt['e'] = 1. * dqdt['h_2']
+        # dqdt['e'] = 1. * dqdt['h_2']
 
         # Electrons from helium ionizations
         if self.include_He:
@@ -456,11 +462,11 @@ class ChemicalNetwork(object):
         #     f.write(str(q[1]) + '\n')# Xia
         
 
-        # if (self.q < 0).sum():
-        #     # print('self.q =', self.q)  # added by Bin Xia
-        #     # self.q = ( np.abs(self.q) + self.q ) / 2
-        #     solver_error(self.grid, -1000, [self.q], [self.dqdt], -1000, cell, -1000)
-        #     raise ValueError('Something < 0.')
+        if (self.q < 0).sum():
+            # print('self.q =', self.q)  # added by Bin Xia
+            # self.q = ( np.abs(self.q) + self.q ) / 2
+            solver_error(self.grid, -1000, [self.q], [self.dqdt], -1000, cell, -1000)
+            raise ValueError('Something < 0.')
 
         return self.dqdt
 

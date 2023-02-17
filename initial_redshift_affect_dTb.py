@@ -12,8 +12,9 @@ z1010.run()
 plt.plot(z60.history['z'], z60.history['dTb'])
 plt.plot(z1010.history['z'], z1010.history['dTb'])
 
-plt.xlim(0, 300)
-plt.ylim(-60, 0)
+plt.xlim(0, 1100)#300)
+# plt.ylim(-60, 0)
+plt.ylim(-45, 10)
 
 plt.xlabel('z')
 plt.ylabel('dTb [mK]')
