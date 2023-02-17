@@ -321,14 +321,16 @@ class ChemicalNetwork(object):
         ##
 
         # Gains from ionizations of HI
-        Tcmb = self.cosm.TCMB(z)
-        H = self.cosm.HubbleParameter(z)
-        if 60 < z < 1010:
-            # print('Cs.k =', Cs.k, 'K_B', k_B)
-            dqdt['e'] = -Peebles_C_factor(z, n_H, H, xe, Tcmb)*(n_H*A_B(z, Tcmb)*xe**2-4*(1-xe)*B_B(z, Tcmb)*np.exp(3*E_0/(4*Cs.k*Tcmb)))
-            print(__name__, 'z =', z, 'xe =', xe, 'dxedt =', dqdt['e'])
-        else:
-            dqdt['e'] = 1. * dqdt['h_2']
+        # Tcmb = self.cosm.TCMB(z)
+        # H = self.cosm.HubbleParameter(z)
+        # if 60 < z < 1010:
+        #     # print('Cs.k =', Cs.k, 'K_B', k_B)
+        #     dqdt['e'] = -Peebles_C_factor(z, n_H, H, xe, Tcmb)*(n_H*A_B(z, Tcmb)*xe**2-4*(1-xe)*B_B(z, Tcmb)*np.exp(3*E_0/(4*Cs.k*Tcmb)))
+        #     print(__name__, 'z =', z, 'xe =', xe, 'dxedt =', dqdt['e'])
+        # else:
+        #     dqdt['e'] = 1. * dqdt['h_2']
+
+        dqdt['e'] = 1. * dqdt['h_2']
 
         # Electrons from helium ionizations
         if self.include_He:
