@@ -302,6 +302,8 @@ class Cosmology(object):
 
     def UCMB(self, z):
         """ CMB energy density. """
+        # if self.pf['initial_redshift'] == 1010:
+        #     print(__name__)
         return 4.0 * sigma_SB * self.TCMB(z)**4 / c
 
     def t_of_z(self, z):
