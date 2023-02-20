@@ -244,22 +244,21 @@ class ChemicalNetwork(object):
         # else:
         #     dqdt['h_1'] = -(k_ion[0] + gamma_HI + self.Beta[cell, 0] * n_e) * x['h_1'] + self.alpha[cell, 0] * n_e * x['h_2'] * CF 
         
-        Tcmb = self.cosm.TCMB(z)
-        H = self.cosm.HubbleParameter(z)
-        if 60 < z < self.grid.pf['initial_redshift']:
-            '''
-            This part is in S.I. unit
-            '''
-            # print('Cs.k =', Cs.k, 'K_B', k_B)
-            dqdt['h_1'] = Peebles_C_factor(z, n_H*1e6, H, xe, Tcmb)*(n_H*1e6*A_B(z, Tcmb)*xe**2-4*(1-xe)*B_B(z, Tcmb)*np.exp(3*E_0/(4*Cs.k*Tcmb)))
-            # print(__name__,'\nz=', z,'\nn_H=', n_H*1e6,'\nH=', H,'\nxe=', xe,'\nTcmb=', Tcmb,'\ndxedt =', dqdt['e'])
-            # print("A_B(z)=", A_B(z, Tcmb))
-            # print("B_B(z)=", B_B(z, Tcmb))    
-            # print('---'*10)
-        else:
-            dqdt['h_1'] = -(k_ion[0] + gamma_HI + self.Beta[cell, 0] * n_e) * x['h_1'] + self.alpha[cell, 0] * n_e * x['h_2'] * CF 
-
-        # dqdt['h_1'] = -(k_ion[0] + gamma_HI + self.Beta[cell, 0] * n_e) * x['h_1'] + self.alpha[cell, 0] * n_e * x['h_2'] * CF 
+        # Tcmb = self.cosm.TCMB(z)
+        # H = self.cosm.HubbleParameter(z)
+        # if 60 < z < self.grid.pf['initial_redshift']:
+        #     '''
+        #     This part is in S.I. unit
+        #     '''
+        #     # print('Cs.k =', Cs.k, 'K_B', k_B)
+        #     dqdt['h_1'] = Peebles_C_factor(z, n_H*1e6, H, xe, Tcmb)*(n_H*1e6*A_B(z, Tcmb)*xe**2-4*(1-xe)*B_B(z, Tcmb)*np.exp(3*E_0/(4*Cs.k*Tcmb)))
+        #     # print(__name__,'\nz=', z,'\nn_H=', n_H*1e6,'\nH=', H,'\nxe=', xe,'\nTcmb=', Tcmb,'\ndxedt =', dqdt['e'])
+        #     # print("A_B(z)=", A_B(z, Tcmb))
+        #     # print("B_B(z)=", B_B(z, Tcmb))    
+        #     # print('---'*10)
+        # else:
+        #     dqdt['h_1'] = -(k_ion[0] + gamma_HI + self.Beta[cell, 0] * n_e) * x['h_1'] + self.alpha[cell, 0] * n_e * x['h_2'] * CF 
+        dqdt['h_1'] = -(k_ion[0] + gamma_HI + self.Beta[cell, 0] * n_e) * x['h_1'] + self.alpha[cell, 0] * n_e * x['h_2'] * CF 
 
         # print("dqdt['h_1'] =", dqdt['h_1'])
         # print("CF =", CF)
@@ -350,7 +349,6 @@ class ChemicalNetwork(object):
         #     # print('---'*10)
         # else:
         #     dqdt['e'] = 1. * dqdt['h_2']
-
         dqdt['e'] = 1. * dqdt['h_2']
 
         # Electrons from helium ionizations
@@ -386,16 +384,16 @@ class ChemicalNetwork(object):
                     ucmb = self.cosm.UCMB(z)
 
                     # Seager, Sasselov, & Scott (2000) Equation 54
-                    compton = rad_const * ucmb * n_e * (Tcmb - q[-1]) / ntot # /3
+                    compton = rad_const * ucmb * n_e * (Tcmb - q[-1]) / ntot
 
             # print('approx_thermal_history = ',self.grid.cosm.pf['approx_thermal_history']) # False in default, Bin Xia
             if self.grid.cosm.pf['approx_thermal_history']:
                 dqdt['Tk'] = heat * to_temp \
                     - self.cosm.cooling_rate(z, q[-1]) / self.cosm.dtdz(z)
             else:
-                # dqdt['Tk'] = (heat - n_e * cool) * to_temp + compton \
-                #     - hubcool - q[-1] * n_H * dqdt['e'] / ntot
-                dqdt['Tk'] = compton - hubcool
+                dqdt['Tk'] = (heat - n_e * cool) * to_temp + compton \
+                    - hubcool - q[-1] * n_H * dqdt['e'] / ntot
+                # dqdt['Tk'] = compton - hubcool
                 # if self.grid.pf['initial_redshift'] == 1010:
                 #     print(__name__)
                 #     print("z =", z)

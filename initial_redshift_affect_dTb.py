@@ -2,9 +2,9 @@ import ares
 import matplotlib.pyplot as plt
 
 z60 = ares.simulations.Global21cm(
-    radiative_transfer=False, include_cgm=False, initial_redshift=60)
+    radiative_transfer=False, include_cgm=False, initial_redshift=60, include_He=True)
 z1010 = ares.simulations.Global21cm(
-    radiative_transfer=False, include_cgm=False, initial_redshift=1010)#, clumping_factor=2
+    radiative_transfer=False, include_cgm=False, initial_redshift=1010, include_He=True)#, clumping_factor=2
 
 z60.run()
 z1010.run()
