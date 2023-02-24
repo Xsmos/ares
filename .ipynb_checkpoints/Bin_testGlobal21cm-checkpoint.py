@@ -13,7 +13,7 @@ plt.plot(1+sim.history['z'], sim.history['dTb'],
 sim = ares.simulations.Global21cm(radiative_transfer=False, verbose=False, dark_matter_heating=True, include_cgm=False, initial_v_stream=0, initial_redshift=1010, include_He=include_He)
 sim.run()
 plt.plot(1+sim.history['z'], sim.history['dTb'],
-         label=r'DM, $V{\chi b,0}=$'+'{}m/s'.format(sim.pf['initial_v_stream']), c='b', linestyle='--')
+             label=r'DM, $V{\chi b,0}=$'+'{}m/s'.format(sim.pf['initial_v_stream']), c='b', linestyle='--')
 
 
 sim = ares.simulations.Global21cm(radiative_transfer=False, verbose=False, dark_matter_heating=True, include_cgm=False, initial_redshift=1010, include_He=include_He)
