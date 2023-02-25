@@ -12,14 +12,14 @@ rho_d_0 = Omega_dm_0 * rho_crit_0
 rho_b_0 = Omega_b_0 * rho_crit_0
 f_dm = 1
 f_He = 0#0.08 # n_He/n_H
-m_chi = .1*Cs.giga*Cs.eV / Cs.c**2
+# m_chi = .1*Cs.giga*Cs.eV / Cs.c**2
 
 
-def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_temperature, electron_fraction, stream_velocity):
+def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_temperature, electron_fraction, stream_velocity, dark_matter_mass):
     '''
-    input: z, Tb, xe, Tchi, v_stream
+    input: z, Tb, xe, Tchi, v_stream (m/s), dark_matter_mass (GeV/c**2)
     '''
-    global z, Tb, xe, Tchi, v_stream
+    global z, Tb, xe, Tchi, v_stream, m_chi
     #print('baryon_dark_matter_interaction working...')
 
     z = redshift
@@ -27,8 +27,9 @@ def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_tem
     Tchi = dark_matter_temperature
     xe = electron_fraction
     v_stream = stream_velocity
-    
-    # print(__name__, z, Tb, Tchi, xe, v_stream)
+    m_chi = dark_matter_mass * Cs.giga*Cs.eV / Cs.c**2
+
+    print(__name__, z, Tb, Tchi, xe, v_stream, dark_matter_mass)
     # if v_stream == 0:
     #     print('v_stream is 0!')
     # print(z, Tb, Tchi, xe, v_stream)

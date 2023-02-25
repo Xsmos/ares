@@ -10,7 +10,8 @@ pf = \
     'include_cgm':False, 
     # 'initial_v_stream':0, 
     'initial_redshift':1010, 
-    'include_He':True
+    'include_He':True,
+    # 'dark_matter_mass':10
     }
 
 V_rms = 29000 # m/s
@@ -18,3 +19,4 @@ V_rms = 29000 # m/s
 
 initial_v_stream = np.random.normal(0, V_rms)
 sim = ares.simulations.Global21cm(initial_v_stream = initial_v_stream, **pf)
+sim.run()

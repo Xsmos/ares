@@ -422,7 +422,7 @@ class ChemicalNetwork(object):
                 # print(interaction)
                 # raise ValueError("Good to stop here.")
 
-                interaction = DarkMatterHeating.baryon_dark_matter_interaction(z, q[-1], q[-4], xe, q[-3])
+                interaction = DarkMatterHeating.baryon_dark_matter_interaction(z, q[-1], q[-4], xe, q[-3], self.grid.pf['dark_matter_mass'])
                 dqdt['Tk'] += interaction['baryon']*2/3
                 dqdt['Tchi'] = -2 * \
                     self.cosm.HubbleParameter(z)*q[-4] + interaction['dark matter']*2/3
