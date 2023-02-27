@@ -29,7 +29,7 @@ def baryon_dark_matter_interaction(redshift, baryon_temperature, dark_matter_tem
     v_stream = stream_velocity
     m_chi = dark_matter_mass * Cs.giga*Cs.eV / Cs.c**2
 
-    print(__name__, z, Tb, Tchi, xe, v_stream, dark_matter_mass)
+    # print(__name__, z, Tb, Tchi, xe, v_stream, dark_matter_mass)
     # if v_stream == 0:
     #     print('v_stream is 0!')
     # print(z, Tb, Tchi, xe, v_stream)

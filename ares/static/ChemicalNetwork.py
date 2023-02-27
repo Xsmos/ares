@@ -426,8 +426,11 @@ class ChemicalNetwork(object):
                 dqdt['Tk'] += interaction['baryon']*2/3
                 dqdt['Tchi'] = -2 * \
                     self.cosm.HubbleParameter(z)*q[-4] + interaction['dark matter']*2/3
-                dqdt['v_stream'] = - \
-                    self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
+                
+                if abs(q[-3]) < self.grid.pf['initial_v_stream'] * 1e-6:
+                    dqdt['v_stream'] = 0
+                else:
+                    dqdt['v_stream'] = - self.cosm.HubbleParameter(z)*q[-3] - interaction['drag']
 
                 # print(__name__, 'z =', z, 't =', t, 'v =', q[-3], 'D =', interaction['drag'], 'H =', self.cosm.HubbleParameter(z))
 
