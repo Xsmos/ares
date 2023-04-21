@@ -125,7 +125,7 @@ if __name__ == "__main__":
     plt.xlabel("z")
     plt.ylabel("dTb [mK]")
     plt.ylim(-60,0)
-    plt.xlim(10,1000)
+    plt.xlim(10,300)
     plt.title("global dTb vs z")
     plt.legend()
     plt.show()
