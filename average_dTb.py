@@ -76,7 +76,7 @@ def average_dTb(m_chi=0.1, N_z=100, plot=False, save_time=True):
     file_names = os.listdir("./average_dTb/m_chi{}".format(m_chi))
     print("Preprocessing {} files of dTb for m_chi = {} GeV...".format(len(file_names), m_chi))
 
-    z_array = np.linspace(10, 300, N_z)
+    z_array = np.linspace(10, 1000, N_z)
 
     for file_name in file_names:
         data = np.load("./average_dTb/m_chi{}/{}".format(m_chi, file_name))
