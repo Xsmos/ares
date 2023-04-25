@@ -120,12 +120,16 @@ if __name__ == "__main__":
 
     sim = ares.simulations.Global21cm(radiative_transfer=False, verbose =False)
     sim.run()
-    plt.plot(sim.history['z'], sim.history['dTb'], label="no DM heating", color='k')
+    plt.plot(sim.history['z'], sim.history['dTb'], label="total default", color='k', linestyle=':')
+
+    sim0 = ares.simulations.Global21cm(radiative_transfer=False, verbose =False, initial_redshift=1010, include_cgm=False, include_He = True)
+    sim0.run()
+    plt.plot(sim0.history['z'], sim0.history['dTb'], label="no DM heating", color='k')
 
     plt.xlabel("z")
     plt.ylabel("dTb [mK]")
     plt.ylim(-60,0)
-    plt.xlim(10,1000)
+    plt.xlim(10,300)
     plt.title("global dTb vs z")
     plt.legend()
     plt.show()
