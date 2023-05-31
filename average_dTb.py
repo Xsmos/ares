@@ -46,7 +46,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10):
     start_time = time.time()
     for i, initial_v_stream in enumerate(initial_v_stream_list):
         print("\ninitial_v_stream =", initial_v_stream, 'm/s', end='')
-        if os.path.exists("./average_dTb/m_chi{}/{}.npy".format(m_chi, int(initial_v_stream))):
+        if os.path.exists("./average_dTb/m_chi{:.2f}/{}.npy".format(m_chi, int(initial_v_stream))):
             print(" is skipped because file exists", end='')
             continue
 
@@ -55,11 +55,11 @@ def dTb_random_v_stream(m_chi=0.1, N=10):
         # sim = sim_dict[initial_v_stream]
         sim.run()
 
-        if not os.path.exists("./average_dTb/m_chi{}".format(sim.pf['dark_matter_mass'])):
+        if not os.path.exists("./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass'])):
             os.makedirs(
-                "./average_dTb/m_chi{}".format(sim.pf['dark_matter_mass']))
+                "./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass']))
 
-        np.save("./average_dTb/m_chi{}/{}".format(sim.pf['dark_matter_mass'], (int(
+        np.save("./average_dTb/m_chi{:.2f}/{}".format(sim.pf['dark_matter_mass'], (int(
             initial_v_stream))), np.vstack((sim.history["z"], sim.history["dTb"])))
         # dTb_dict[initial_v_stream] = np.interp(z_array, sim.history['z'][::-1], sim.history['dTb'][::-1])
         # sim_dict[initial_v_stream].save()
@@ -70,17 +70,17 @@ def dTb_random_v_stream(m_chi=0.1, N=10):
         time_elapse, N))
 
 
-def average_dTb(m_chi=0.1, N_z=1000, plot=False, save_time=True):
-    if not os.path.exists("./average_dTb/m_chi{}".format(m_chi)) or not save_time:
-        dTb_random_v_stream(m_chi)
+def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_stream = 10):
+    if not os.path.exists("./average_dTb/m_chi{:.2f}".format(m_chi)) or more_random_v_stream:
+        dTb_random_v_stream(m_chi, N = more_random_v_stream)
 
-    file_names = os.listdir("./average_dTb/m_chi{}".format(m_chi))
+    file_names = os.listdir("./average_dTb/m_chi{:.2f}".format(m_chi))
     print("Preprocessing {} files of dTb for m_chi = {} GeV...".format(len(file_names), m_chi))
 
     z_array = np.linspace(10, 1010, N_z)
 
     for file_name in file_names:
-        data = np.load("./average_dTb/m_chi{}/{}".format(m_chi, file_name))
+        data = np.load("./average_dTb/m_chi{:.2f}/{}".format(m_chi, file_name))
         dTb_interp = np.interp(z_array, data[0][::-1], data[1][::-1])
         if "all_dTb_interp" not in vars():
             all_dTb_interp = dTb_interp.copy()
@@ -89,11 +89,13 @@ def average_dTb(m_chi=0.1, N_z=1000, plot=False, save_time=True):
 
     print("{} files have been interpolated.".format(all_dTb_interp.shape[0]))
     dTb_averaged = np.average(all_dTb_interp, axis=0)
-    np.save("./average_dTb/m_chi{}_averaged".format(m_chi),
-            np.vstack((z_array, dTb_averaged)))
+
+    if save:
+        np.save("./average_dTb/m_chi{:.2f}_averaged".format(m_chi),
+                np.vstack((z_array, dTb_averaged)))
 
     if plot:
-        z, T = np.load("./average_dTb/m_chi{}_averaged.npy".format(m_chi))
+        z, T = np.load("./average_dTb/m_chi{:.2f}_averaged.npy".format(m_chi))
         # print(z.shape)
         # print(T.shape)
         # print("plotting...")
@@ -112,14 +114,14 @@ if __name__ == "__main__":
     # dTb_random_v_stream()
     # average_dTb(plot=True)
     m_chi_list = [0.1, 1, 10]
-    color_dict = {0.1: "blue", 1: "purple", 10: "red"}
-    style_dict = {0.1: '--', 1: "-.", 10: ":"}
+    color_dict = {0.1: "blue", 0.5: 'green', 1: "purple", 10: "red"}
+    style_dict = {0.1: '--', 0.5: ':', 1: "-.", 10: ":"}
 
     fig, ax = plt.subplots()
     # fig.figure(dpi = 150)
 
     for m_chi in m_chi_list:
-        z, T, m_chi = average_dTb(m_chi, save_time=False)
+        z, T, m_chi = average_dTb(m_chi, more_random_v_stream = 5)
         ax.plot(z, T, label='$m_{\chi}$'+' = {} GeV'.format(m_chi), color=color_dict[m_chi], linewidth=3, linestyle=style_dict[m_chi])
         print("---"*30)
 
@@ -145,6 +147,6 @@ if __name__ == "__main__":
     ax.set_ylim(-60,0)
     ax.set_xlim(10, 300)
     # plt.title("global dTb vs z")
-    plt.legend()
+    plt.legend(handlelength=3)
     plt.savefig("average_dTb", dpi=720)
     plt.show()
