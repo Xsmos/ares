@@ -4,12 +4,14 @@ import numpy as np
 import time
 import os
 from scipy import interpolate
+import multiprocessing
+from multiprocessing import Pool
 
 V_rms = 29000  # m/s
 # N = 5  # number of initial_v_stream
 
 
-def dTb_random_v_stream(m_chi=0.1, N=10):
+def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0):
     """
     randomly generate N initial_v_streams and calculate their 21cm temperatures with dark_matter_heating.
     """
@@ -44,25 +46,50 @@ def dTb_random_v_stream(m_chi=0.1, N=10):
 
     print("dark_matter_mass = {} GeV".format(m_chi), end='')
     start_time = time.time()
-    for i, initial_v_stream in enumerate(initial_v_stream_list):
-        print("\ninitial_v_stream =", initial_v_stream, 'm/s', end='')
-        if os.path.exists("./average_dTb/m_chi{:.2f}/{}.npy".format(m_chi, int(initial_v_stream))):
-            print(" is skipped because file exists", end='')
-            continue
 
-        sim = ares.simulations.Global21cm(
-            initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
-        # sim = sim_dict[initial_v_stream]
-        sim.run()
+    if mpi == 0:
+        for i, initial_v_stream in enumerate(initial_v_stream_list):
+            print("\ninitial_v_stream =", initial_v_stream, 'm/s', end='')
+            if os.path.exists("./average_dTb/m_chi{:.2f}/{}.npy".format(m_chi, int(initial_v_stream))):
+                print(" is skipped because file exists", end='')
+                continue
 
-        if not os.path.exists("./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass'])):
-            os.makedirs(
-                "./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass']))
+            sim = ares.simulations.Global21cm(
+                initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
+            # sim = sim_dict[initial_v_stream]
+            sim.run()
 
-        np.save("./average_dTb/m_chi{:.2f}/{}".format(sim.pf['dark_matter_mass'], (int(
-            initial_v_stream))), np.vstack((sim.history["z"], sim.history["dTb"])))
-        # dTb_dict[initial_v_stream] = np.interp(z_array, sim.history['z'][::-1], sim.history['dTb'][::-1])
-        # sim_dict[initial_v_stream].save()
+            if not os.path.exists("./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass'])):
+                os.makedirs(
+                    "./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass']))
+
+            np.save("./average_dTb/m_chi{:.2f}/{}".format(sim.pf['dark_matter_mass'], (int(
+                initial_v_stream))), np.vstack((sim.history["z"], sim.history["dTb"])))
+            # dTb_dict[initial_v_stream] = np.interp(z_array, sim.history['z'][::-1], sim.history['dTb'][::-1])
+            # sim_dict[initial_v_stream].save()
+    elif mpi == 1:
+        global f_mpi
+
+        def f_mpi(initial_v_stream):
+            print("\npid = {}, initial_v_stream = {} m/s",
+                  format(os.getpid(), initial_v_stream), end='')
+            if os.path.exists("./average_dTb/m_chi{:.2f}/{}.npy".format(m_chi, int(initial_v_stream))):
+                print(" is skipped because file exists", end='')
+                return
+
+            sim = ares.simulations.Global21cm(
+                initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
+            # sim = sim_dict[initial_v_stream]
+            sim.run()
+
+            if not os.path.exists("./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass'])):
+                os.makedirs(
+                    "./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass']))
+
+            np.save("./average_dTb/m_chi{:.2f}/{}".format(sim.pf['dark_matter_mass'], (int(
+                initial_v_stream))), np.vstack((sim.history["z"], sim.history["dTb"])))
+        with Pool(multiprocessing.cpu_count()) as p:
+            p.map(f_mpi, initial_v_stream_list)
 
     end_time = time.time()
     time_elapse = end_time - start_time
@@ -70,12 +97,13 @@ def dTb_random_v_stream(m_chi=0.1, N=10):
         time_elapse, N))
 
 
-def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_stream = 10):
+def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_stream=10, mpi=0):
     if not os.path.exists("./average_dTb/m_chi{:.2f}".format(m_chi)) or more_random_v_stream:
-        dTb_random_v_stream(m_chi, N = more_random_v_stream)
+        dTb_random_v_stream(m_chi, N=more_random_v_stream, mpi=mpi)
 
     file_names = os.listdir("./average_dTb/m_chi{:.2f}".format(m_chi))
-    print("Preprocessing {} files of dTb for m_chi = {} GeV...".format(len(file_names), m_chi))
+    print("Preprocessing {} files of dTb for m_chi = {} GeV...".format(
+        len(file_names), m_chi))
 
     z_array = np.linspace(10, 1010, N_z)
 
@@ -121,17 +149,20 @@ if __name__ == "__main__":
     # fig.figure(dpi = 150)
 
     for m_chi in m_chi_list:
-        z, T, m_chi = average_dTb(m_chi, more_random_v_stream = 5)
-        ax.plot(z, T, label='$m_{\chi}$'+' = {} GeV'.format(m_chi), color=color_dict[m_chi], linewidth=3, linestyle=style_dict[m_chi])
+        z, T, m_chi = average_dTb(m_chi, more_random_v_stream=5, mpi=1)
+        ax.plot(z, T, label='$m_{\chi}$'+' = {} GeV'.format(m_chi),
+                color=color_dict[m_chi], linewidth=3, linestyle=style_dict[m_chi])
         print("---"*30)
 
     # sim = ares.simulations.Global21cm(radiative_transfer=False, verbose =False)
     # sim.run()
     # plt.plot(sim.history['z'], sim.history['dTb'], label="no DMheat, z_initial = {}".format(sim.pf['initial_redshift']), color='k', linestyle=':', linewidth=0.5)
 
-    sim0 = ares.simulations.Global21cm(radiative_transfer=False, verbose =False, initial_redshift=1010, include_cgm=False, include_He = True)
+    sim0 = ares.simulations.Global21cm(
+        radiative_transfer=False, verbose=False, initial_redshift=1010, include_cgm=False, include_He=True)
     sim0.run()
-    ax.plot(sim0.history['z'], sim0.history['dTb'], label="no DM heating".format(sim0.pf['initial_redshift']), color='k', linewidth=3, linestyle='-')
+    ax.plot(sim0.history['z'], sim0.history['dTb'], label="no DM heating".format(
+        sim0.pf['initial_redshift']), color='k', linewidth=3, linestyle='-')
 
     z0 = sim0.history['z']
     t0 = sim0.history['t']/31556952000000
@@ -144,7 +175,7 @@ if __name__ == "__main__":
 
     ax.set_xlabel("Redshift", fontsize=11)
     ax.set_ylabel("Brightness Temperature [mK]", fontsize=11)
-    ax.set_ylim(-60,0)
+    ax.set_ylim(-60, 0)
     ax.set_xlim(10, 300)
     # plt.title("global dTb vs z")
     plt.legend(handlelength=3)
