@@ -88,6 +88,7 @@ def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_stream
             all_dTb_interp = np.vstack((all_dTb_interp, dTb_interp))
 
     print("{} files have been interpolated.".format(all_dTb_interp.shape[0]))
+    print("---"*15)
     dTb_averaged = np.average(all_dTb_interp, axis=0)
 
     if save:
