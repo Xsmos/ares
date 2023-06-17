@@ -68,11 +68,11 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0):
             # dTb_dict[initial_v_stream] = np.interp(z_array, sim.history['z'][::-1], sim.history['dTb'][::-1])
             # sim_dict[initial_v_stream].save()
     elif mpi == 1:
+        print("\n{} cores working...".format(multiprocessing.cpu_count()), end='')
         global f_mpi
 
         def f_mpi(initial_v_stream):
-            print("\npid = {}, initial_v_stream = {} m/s",
-                  format(os.getpid(), initial_v_stream), end='')
+            print("\npid = {}, initial_v_stream = {} m/s".format(os.getpid(), initial_v_stream), end='')
             if os.path.exists("./average_dTb/m_chi{:.2f}/{}.npy".format(m_chi, int(initial_v_stream))):
                 print(" is skipped because file exists", end='')
                 return
