@@ -90,7 +90,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True):
                 os.makedirs(
                     "./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass']))
 
-            np.save("./average_dTb/m_chi{:.2f}/{:3f}".format(sim.pf['dark_matter_mass'], ((
+            np.save("./average_dTb/m_chi{:.2f}/{:.3f}".format(sim.pf['dark_matter_mass'], ((
                 initial_v_stream))), np.vstack((sim.history["z"], sim.history["dTb"])))
         with Pool(multiprocessing.cpu_count()) as p:
             p.map(f_mpi, initial_v_stream_list)
@@ -101,9 +101,9 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True):
         time_elapse, N))
 
 
-def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_stream=10, mpi=0):
+def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_stream=10, mpi=0, verbose=True):
     if not os.path.exists("./average_dTb/m_chi{:.2f}".format(m_chi)) or more_random_v_stream:
-        dTb_random_v_stream(m_chi, N=more_random_v_stream, mpi=mpi)
+        dTb_random_v_stream(m_chi, N=more_random_v_stream, mpi=mpi, verbose=verbose)
 
     file_names = os.listdir("./average_dTb/m_chi{:.2f}".format(m_chi))
     print("Preprocessing {} files of dTb for m_chi = {} GeV...".format(
