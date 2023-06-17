@@ -11,7 +11,7 @@ V_rms = 29000  # m/s
 # N = 5  # number of initial_v_stream
 
 
-def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0):
+def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True):
     """
     randomly generate N initial_v_streams and calculate their 21cm temperatures with dark_matter_heating.
     """
@@ -49,10 +49,11 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0):
 
     if mpi == 0:
         for i, initial_v_stream in enumerate(initial_v_stream_list):
-            print("\ninitial_v_stream =", initial_v_stream, 'm/s', end='')
-            if os.path.exists("./average_dTb/m_chi{:.2f}/{}.npy".format(m_chi, int(initial_v_stream))):
-                print(" is skipped because file exists", end='')
-                continue
+            if verbose:
+                print("\ninitial_v_stream =", initial_v_stream, 'm/s', end='')
+            # if os.path.exists("./average_dTb/m_chi{:.2f}/{}.npy".format(m_chi, int(initial_v_stream))):
+            #     print(" is skipped because file exists", end='')
+            #     continue
 
             sim = ares.simulations.Global21cm(
                 initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
@@ -63,19 +64,22 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0):
                 os.makedirs(
                     "./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass']))
 
-            np.save("./average_dTb/m_chi{:.2f}/{}".format(sim.pf['dark_matter_mass'], (int(
+            np.save("./average_dTb/m_chi{:.2f}/{:.3f}".format(sim.pf['dark_matter_mass'], ((
                 initial_v_stream))), np.vstack((sim.history["z"], sim.history["dTb"])))
             # dTb_dict[initial_v_stream] = np.interp(z_array, sim.history['z'][::-1], sim.history['dTb'][::-1])
             # sim_dict[initial_v_stream].save()
     elif mpi == 1:
-        print("\n{} cores working...".format(multiprocessing.cpu_count()), end='')
+        print("\n{} cores working...".format(
+            multiprocessing.cpu_count()), end='')
         global f_mpi
 
         def f_mpi(initial_v_stream):
-            print("\npid = {}, initial_v_stream = {} m/s".format(os.getpid(), initial_v_stream), end='')
-            if os.path.exists("./average_dTb/m_chi{:.2f}/{}.npy".format(m_chi, int(initial_v_stream))):
-                print(" is skipped because file exists", end='')
-                return
+            if verbose:
+                print("\npid = {}, initial_v_stream = {} m/s".format(os.getpid(),
+                      initial_v_stream), end='')
+            # if os.path.exists("./average_dTb/m_chi{:.2f}/{}.npy".format(m_chi, int(initial_v_stream))):
+            #     print(" is skipped because file exists", end='')
+            #     return
 
             sim = ares.simulations.Global21cm(
                 initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
@@ -86,7 +90,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0):
                 os.makedirs(
                     "./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass']))
 
-            np.save("./average_dTb/m_chi{:.2f}/{}".format(sim.pf['dark_matter_mass'], (int(
+            np.save("./average_dTb/m_chi{:.2f}/{:3f}".format(sim.pf['dark_matter_mass'], ((
                 initial_v_stream))), np.vstack((sim.history["z"], sim.history["dTb"])))
         with Pool(multiprocessing.cpu_count()) as p:
             p.map(f_mpi, initial_v_stream_list)
