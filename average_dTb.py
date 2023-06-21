@@ -48,7 +48,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True):
     start_time = time.time()
 
     if not mpi:
-        print("\nOnly 1 core is working...", end='')
+        print("\nOnly 1 CPU is working...", end='')
         for i, initial_v_stream in enumerate(initial_v_stream_list):
             if verbose:
                 print("\ninitial_v_stream =", initial_v_stream, 'm/s', end='')
@@ -70,7 +70,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True):
             # dTb_dict[initial_v_stream] = np.interp(z_array, sim.history['z'][::-1], sim.history['dTb'][::-1])
             # sim_dict[initial_v_stream].save()
     else:
-        print("\n{} cores working...".format(
+        print("\n{} CPUs working...".format(
             multiprocessing.cpu_count()), end='')
         global f_mpi
 
