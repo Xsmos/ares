@@ -47,7 +47,8 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True):
     print("dark_matter_mass = {} GeV".format(m_chi), end='')
     start_time = time.time()
 
-    if mpi == 0:
+    if not mpi:
+        print("\nOnly 1 core is working...", end='')
         for i, initial_v_stream in enumerate(initial_v_stream_list):
             if verbose:
                 print("\ninitial_v_stream =", initial_v_stream, 'm/s', end='')
@@ -68,7 +69,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True):
                 initial_v_stream))), np.vstack((sim.history["z"], sim.history["dTb"])))
             # dTb_dict[initial_v_stream] = np.interp(z_array, sim.history['z'][::-1], sim.history['dTb'][::-1])
             # sim_dict[initial_v_stream].save()
-    elif mpi == 1:
+    else:
         print("\n{} cores working...".format(
             multiprocessing.cpu_count()), end='')
         global f_mpi
@@ -101,9 +102,9 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True):
         time_elapse, N))
 
 
-def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_stream=10, mpi=0, verbose=True):
-    if not os.path.exists("./average_dTb/m_chi{:.2f}".format(m_chi)) or more_random_v_stream:
-        dTb_random_v_stream(m_chi, N=more_random_v_stream, mpi=mpi, verbose=verbose)
+def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_streams=10, mpi=True, verbose=True):
+    if not os.path.exists("./average_dTb/m_chi{:.2f}".format(m_chi)) or more_random_v_streams:
+        dTb_random_v_stream(m_chi, N=more_random_v_streams, mpi=mpi, verbose=verbose)
 
     file_names = os.listdir("./average_dTb/m_chi{:.2f}".format(m_chi))
     print("Preprocessing {} files of dTb for m_chi = {} GeV...".format(
@@ -154,7 +155,7 @@ if __name__ == "__main__":
     # fig.figure(dpi = 150)
 
     for m_chi in m_chi_list:
-        z, T, m_chi = average_dTb(m_chi, more_random_v_stream=5, mpi=1)
+        z, T, m_chi = average_dTb(m_chi, more_random_v_streams=5, mpi=1)
         ax.plot(z, T, label='$m_{\chi}$'+' = {} GeV'.format(m_chi),
                 color=color_dict[m_chi], linewidth=3, linestyle=style_dict[m_chi])
         print("---"*30)
