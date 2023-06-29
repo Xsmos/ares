@@ -50,7 +50,7 @@ def residual(param, z_sample, dTb_sample, mpi=True):
     residual = interp_dTb(param, z_sample, mpi) - dTb_sample
     return residual
 
-def fit_param(z_sample, dTb_sample, param_guess=[0.1], bounds=([0,10]), mpi=True):
+def fit_param(z_sample, dTb_sample, param_guess=[0.1], bounds=([0,10]), mpi=True, repeat=2):
     '''
     fit the parameter(s) by z_sample and dTb_sample via scipy.optimize.least_squares.
     '''
@@ -58,8 +58,23 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1], bounds=([0,10]), mpi=True
     if z_sample.shape != dTb_sample.shape:
         print("z_sample and dTb_sample should have same shape.")
         return
-    res = least_squares(residual, param_guess, diff_step=0.1, bounds=bounds, xtol=1e-3, args=(z_sample, dTb_sample, mpi))
-    return res.x, res.success, res.status
+    
+    # fitting_results_txt = open("average_dTb/fitting_results.txt", 'x')
+    for i in range(0, repeat):
+        res = least_squares(residual, param_guess, diff_step=0.1, bounds=bounds, xtol=1e-3, args=(z_sample, dTb_sample, mpi))
+        print('fit:', res.x, 'success:', res.success, 'status:', res.status)
+        if res.success:
+            # fitting_results_txt.write("{} ".format(res.x[0]))
+            if "fitting_results" not in vars():
+                fitting_results = res.x
+            else:
+                fitting_results = np.vstack((fitting_results, res.x))
+    # fitting_results_txt.close()
+    # fitting_results = np.loadtxt("fitting_results.txt")
+    # fitting_result = np.average(fitting_results)
+    print('---'*15)
+    return fitting_results
+
 
 
 # In[3]:
@@ -76,10 +91,13 @@ def test(param_true=[0.15], noise=3, mpi=True, z_sample = np.arange(10, 300, 5))
     dTb_sample = dTb_accurate + noise * np.random.normal(size = z_sample.shape[0])
     
     # fitting
-    param_fit, success, status = fit_param(z_sample, dTb_sample, mpi=mpi)
-    print('---'*15)
-    print('success =', success)
-    print('status =', status)
+    # param_fit, success, status = fit_param(z_sample, dTb_sample, mpi=mpi)
+    param_fit = fit_param(z_sample, dTb_sample, mpi=mpi)
+    print("fitting_results =", param_fit)
+    param_fit = np.average(param_fit, axis=0)
+    print("param_fit =", param_fit)
+    # print('success =', success)
+    # print('status =', status)
     
     plt.figure(dpi=120)
     sim = ares.simulations.Global21cm(radiative_transfer=False, verbose=False)
@@ -169,53 +187,6 @@ def demonstrate():
     plt.show()
 
 
-# ### Q: How many random stream velocities are required to achieve accurate global brightness temperature?
-# ### A: N = 200 works fine according to the test() function in next section.
-
-# In[5]:
-
-
-if __name__ == "__main__":
-    demonstrate()
-
-
-# In[6]:
-
-
-if __name__ == "__main__":
-    demonstrate()
-
-
-# In[7]:
-
 
 if __name__ == '__main__':
-    test([0.04], mpi=True)
-
-
-# In[8]:
-
-
-if __name__ == '__main__':
-    test([0.4], mpi=True)
-
-
-# In[11]:
-
-
-if __name__ == '__main__':
-    test([4], noise=1, mpi=True)
-
-
-# In[12]:
-
-
-if __name__ == '__main__':
-    test([0.25], mpi=True, z_sample = np.arange(50, 200, 10))
-
-
-# In[ ]:
-
-
-
-
+    test([0.5], mpi=False)
