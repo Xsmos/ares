@@ -70,8 +70,8 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True):
             # dTb_dict[initial_v_stream] = np.interp(z_array, sim.history['z'][::-1], sim.history['dTb'][::-1])
             # sim_dict[initial_v_stream].save()
     else:
-        print("\n{} CPUs working...".format(
-            multiprocessing.cpu_count()), end='')
+        print("\n{} CPUs working in parallel...".format("Multiple"), end='')
+        # print("\n{} CPUs working...".format(multiprocessing.cpu_count()), end='')
         global f_mpi
 
         def f_mpi(initial_v_stream):
@@ -93,13 +93,15 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True):
 
             np.save("./average_dTb/m_chi{:.2f}/{:.3f}".format(sim.pf['dark_matter_mass'], ((
                 initial_v_stream))), np.vstack((sim.history["z"], sim.history["dTb"])))
+            
+            return os.getpid()
+        
         with Pool(multiprocessing.cpu_count()) as p:
-            p.map(f_mpi, initial_v_stream_list)
+            pids = p.map(f_mpi, initial_v_stream_list)
 
     end_time = time.time()
     time_elapse = end_time - start_time
-    print("\nIt costs {:.2f} seconds to calculate dTb of {} different initial_v_streams.".format(
-        time_elapse, N))
+    print("\nIt costs {:.2f} seconds to calculate dTb of {} different initial_v_streams by {} CPUs.".format(time_elapse, N, np.unique(pids).size))
 
 
 def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_streams=10, mpi=True, verbose=True):
