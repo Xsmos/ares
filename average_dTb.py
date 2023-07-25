@@ -7,11 +7,11 @@ from scipy import interpolate
 import multiprocessing
 from multiprocessing import Pool
 
-V_rms = 29000  # m/s
+# V_rms = 29000  # m/s
 # N = 5  # number of initial_v_stream
 
 
-def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True):
+def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True, V_rms = 29000):
     """
     randomly generate N initial_v_streams and calculate their 21cm temperatures with dark_matter_heating.
     """
@@ -52,21 +52,19 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True):
         for i, initial_v_stream in enumerate(initial_v_stream_list):
             if verbose:
                 print("\ninitial_v_stream =", initial_v_stream, 'm/s', end='')
-            # if os.path.exists("./average_dTb/m_chi{:.2f}/{}.npy".format(m_chi, int(initial_v_stream))):
-            #     print(" is skipped because file exists", end='')
-            #     continue
 
             sim = ares.simulations.Global21cm(
                 initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
             # sim = sim_dict[initial_v_stream]
             sim.run()
 
-            if not os.path.exists("./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass'])):
-                os.makedirs(
-                    "./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass']))
+            path = "./average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(V_rms, sim.pf['dark_matter_mass'])
+            if not os.path.exists(path):
+                os.makedirs(path)
 
-            np.save("./average_dTb/m_chi{:.2f}/{:.3f}".format(sim.pf['dark_matter_mass'], ((
-                initial_v_stream))), np.vstack((sim.history["z"], sim.history["dTb"])))
+            np.save(path+"/{:.3f}".format(initial_v_stream), np.vstack((sim.history["z"], sim.history["dTb"])))
+
+            number_of_CPUs = 1
             # dTb_dict[initial_v_stream] = np.interp(z_array, sim.history['z'][::-1], sim.history['dTb'][::-1])
             # sim_dict[initial_v_stream].save()
     else:
@@ -78,44 +76,41 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True):
             if verbose:
                 print("\npid = {}, initial_v_stream = {} m/s".format(os.getpid(),
                       initial_v_stream), end='')
-            # if os.path.exists("./average_dTb/m_chi{:.2f}/{}.npy".format(m_chi, int(initial_v_stream))):
-            #     print(" is skipped because file exists", end='')
-            #     return
 
             sim = ares.simulations.Global21cm(
                 initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
             # sim = sim_dict[initial_v_stream]
             sim.run()
 
-            if not os.path.exists("./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass'])):
-                os.makedirs(
-                    "./average_dTb/m_chi{:.2f}".format(sim.pf['dark_matter_mass']))
+            path = "./average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(V_rms, sim.pf['dark_matter_mass'])
+            if not os.path.exists(path):
+                os.makedirs(path)
 
-            np.save("./average_dTb/m_chi{:.2f}/{:.3f}".format(sim.pf['dark_matter_mass'], ((
-                initial_v_stream))), np.vstack((sim.history["z"], sim.history["dTb"])))
-            
+            np.save(path+"/{:.3f}".format(initial_v_stream), np.vstack((sim.history["z"], sim.history["dTb"])))
+
             return os.getpid()
         
         with Pool(multiprocessing.cpu_count()) as p:
             pids = p.map(f_mpi, initial_v_stream_list)
+        number_of_CPUs = np.unique(pids).size
 
     end_time = time.time()
     time_elapse = end_time - start_time
-    print("\nIt costs {:.2f} seconds to calculate dTb of {} different initial_v_streams by {} CPUs.".format(time_elapse, N, np.unique(pids).size))
+    print("\nIt costs {:.2f} seconds to calculate dTb of {} different initial_v_streams by {} CPU(s).".format(time_elapse, N, number_of_CPUs))
 
 
-def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_streams=10, mpi=True, verbose=True):
-    if not os.path.exists("./average_dTb/m_chi{:.2f}".format(m_chi)) or more_random_v_streams:
-        dTb_random_v_stream(m_chi, N=more_random_v_streams, mpi=mpi, verbose=verbose)
+def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_streams=10, mpi=True, verbose=True, V_rms=29000):
+    path = "./average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(V_rms, m_chi)
+    if not os.path.exists(path) or more_random_v_streams:
+        dTb_random_v_stream(m_chi, N=more_random_v_streams, mpi=mpi, verbose=verbose, V_rms=V_rms)
 
-    file_names = os.listdir("./average_dTb/m_chi{:.2f}".format(m_chi))
-    print("Preprocessing {} files of dTb for m_chi = {} GeV...".format(
-        len(file_names), m_chi))
+    file_names = os.listdir(path)
+    print("Preprocessing {} files of dTb for m_chi = {} GeV...".format(len(file_names), m_chi))
 
     z_array = np.linspace(10, 1010, N_z)
 
     for file_name in file_names:
-        data = np.load("./average_dTb/m_chi{:.2f}/{}".format(m_chi, file_name))
+        data = np.load(path+"/{}".format(file_name))
         dTb_interp = np.interp(z_array, data[0][::-1], data[1][::-1])
         if "all_dTb_interp" not in vars():
             all_dTb_interp = dTb_interp.copy()
@@ -127,11 +122,10 @@ def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_stream
     dTb_averaged = np.average(all_dTb_interp, axis=0)
 
     if save:
-        np.save("./average_dTb/m_chi{:.2f}_averaged".format(m_chi),
-                np.vstack((z_array, dTb_averaged)))
+        np.save(path+"_averaged".format(m_chi), np.vstack((z_array, dTb_averaged)))
 
     if plot:
-        z, T = np.load("./average_dTb/m_chi{:.2f}_averaged.npy".format(m_chi))
+        z, T = np.load(path+"_averaged.npy")
         # print(z.shape)
         # print(T.shape)
         # print("plotting...")

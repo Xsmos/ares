@@ -18,31 +18,35 @@ import time
 # In[2]:
 
 
-def interp_dTb(param, z, mpi=True, adequate_random_v_streams=200):
+def interp_dTb(param, z, mpi=True, adequate_random_v_streams=20):
     """
     functions:
     1. generate adequate random stream velocities subject to 3D Gaussian distribution;
     2. average dTb over these velocities;
     3. interpolate dTb by input 'z'.
     """
-    m_chi = param[0]
+    m_chi, V_rms = param
     
-    directory = "average_dTb/m_chi"+"{:.2f}".format(m_chi)
+    directory = "average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(V_rms, m_chi)
     if os.path.exists(directory):
         if np.size(os.listdir(directory)) < adequate_random_v_streams:
             more_random_v_streams = adequate_random_v_streams - np.size(os.listdir(directory))
-            print("{} more random v_streams will be generated for m_chi = {} GeV...".format(more_random_v_streams, m_chi))
+            print("{} more random v_streams will be generated for m_chi = {} GeV and V_rms = {} m/s...".format(more_random_v_streams, m_chi, V_rms))
         else:
             more_random_v_streams = 0
-            z_array, dTb_averaged = np.load(directory+'_averaged.npy')
-            print("Existing averaged dTb and z are loaded for m_chi = {} GeV.".format(m_chi))
-            print("---"*15)
+            try:
+                z_array, dTb_averaged = np.load(directory+'_averaged.npy')
+                print("Existing averaged dTb and z are loaded for m_chi = {} GeV and V_rms = {} m/s.".format(m_chi, V_rms))
+                print("---"*15)
+            except FileNotFoundError:
+                more_random_v_streams = 1
+                print("1 more random v_stream to be generated...")
     else:
         more_random_v_streams = adequate_random_v_streams
-        print("{} random v_streams will be generated for m_chi = {} GeV...".format(more_random_v_streams, m_chi))
+        print("{} random v_streams will be generated for m_chi = {} GeV and V_rms = {} m/s...".format(more_random_v_streams, m_chi, V_rms))
     
     if more_random_v_streams:
-        z_array, dTb_averaged, m_chi = average_dTb(m_chi=m_chi, more_random_v_streams=more_random_v_streams, mpi=mpi, verbose=False)
+        z_array, dTb_averaged, m_chi = average_dTb(m_chi=m_chi, more_random_v_streams=more_random_v_streams, mpi=mpi, verbose=False, V_rms=V_rms)
     
     dTb = np.interp(z, z_array, dTb_averaged)
     return dTb
@@ -51,7 +55,7 @@ def residual(param, z_sample, dTb_sample, mpi=True):
     residual = interp_dTb(param, z_sample, mpi) - dTb_sample
     return residual
 
-def fit_param(z_sample, dTb_sample, param_guess=[0.1], bounds=([0,10]), mpi=True):
+def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0,0], [10,29000*2]), mpi=True):
     '''
     fit the parameter(s) by z_sample and dTb_sample via scipy.optimize.least_squares.
     '''
@@ -102,14 +106,14 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1], bounds=([0,10]), mpi=True
 # In[3]:
 
 
-def test(param_true=[0.15], noise=3, mpi=True, z_sample = np.arange(10, 300, 5), stop_plot=5, repeat=20):
+def test(param_true=[0.15, 29000], noise=3, mpi=True, z_sample = np.arange(10, 300, 5), stop_plot=5, repeat=20, plot=True):
     """
     functions:
     1. test the fit_param();
     2. showed that fit_param() works well for m_chi < 1 GeV. 
     """
     # sampling
-    dTb_accurate = interp_dTb(param_true, z_sample)
+    dTb_accurate = interp_dTb(param_true, z_sample, mpi)
     dTb_sample = dTb_accurate + noise * np.random.normal(size = (repeat ,z_sample.shape[0]))
     
     # fitting
@@ -129,41 +133,44 @@ def test(param_true=[0.15], noise=3, mpi=True, z_sample = np.arange(10, 300, 5),
     # print('success =', success)
     # print('status =', status)
     
-    plt.figure(dpi=120)
-    sim = ares.simulations.Global21cm(radiative_transfer=False, verbose=False)
-    sim.run()
-    plt.plot(sim.history['z'], sim.history['dTb'], label = 'no DM heating', color='k', linestyle='--')
-    
-    plt.plot(z_sample, dTb_accurate, label = r'$m_{\chi, \rm real}$'+' = {} GeV'.format(param_true[0]))
-    for i in range(dTb_sample.shape[0]):
-        plt.scatter(z_sample, dTb_sample[i], label=r'fit{} = {:.4f} GeV'.format(i, param_fits[i][0]), s=2)
-        if i >= stop_plot:
-            break
-    plt.plot(z_sample, interp_dTb(param_fit, z_sample), label = r'$m_{\chi, \rm fit}$'+' = {:.3f} GeV'.format(param_fit[0]), linestyle=':', c='r')
-    plt.xlim(0,300)
-    # plt.ylim(-60,0)
-    plt.xlabel(r"$z$")
-    plt.ylabel(r"$\overline{\delta T_b} \rm\ [mK]$")
-    plt.legend()
-    plt.title(r"fit $m_\chi$ from observed global $\delta T_b$ with $\sigma_{\rm noise}$"+" = {} mK".format(noise))
-    plt.show()
-    
-    plt.hist(param_fits, density = True, bins=20)
-    mean = np.average(param_fits)
-    median = np.median(param_fits)
-    std = np.std(param_fits)
-    
-    plt.title("distribution of {} fitting values for dark matter mass".format(repeat))
-    plt.axvline(param_true, c='r', linestyle='-', label='real = '+'{} GeV'.format(param_true[0]))
-    plt.axvline(mean, c='k', linestyle='--', label='mean = '+'{:.3f} GeV'.format(mean))
-    plt.axvline(median, c='gold', linestyle='-.', label='median = '+'{:.3f} GeV'.format(median))
-    plt.axvline(mean+std, c='k', linestyle=':', label=r'mean $\pm$ std')
-    plt.axvline(mean-std, c='k', linestyle=':')
-    plt.legend()
-    plt.xlabel(r"$m_{\chi}$ [GeV]")
-    plt.ylabel("pdf")
-    plt.savefig("{}.png".format(param_true[0]*10))
-    plt.show()
+    if plot:
+        plt.figure(dpi=120)
+        sim = ares.simulations.Global21cm(radiative_transfer=False, verbose=False)
+        sim.run()
+        plt.plot(sim.history['z'], sim.history['dTb'], label = 'no DM heating', color='k', linestyle='--')
+        
+        plt.plot(z_sample, dTb_accurate, label = r'$m_{\chi, \rm real}$'+' = {} GeV'.format(param_true[0]))
+        for i in range(dTb_sample.shape[0]):
+            plt.scatter(z_sample, dTb_sample[i], label=r'fit{} = {:.4f} GeV'.format(i, param_fits[i][0]), s=2)
+            if i >= stop_plot:
+                break
+        plt.plot(z_sample, interp_dTb(param_fit, z_sample), label = r'$m_{\chi, \rm fit}$'+' = {:.3f} GeV'.format(param_fit[0]), linestyle=':', c='r')
+        plt.xlim(0,300)
+        # plt.ylim(-60,0)
+        plt.xlabel(r"$z$")
+        plt.ylabel(r"$\overline{\delta T_b} \rm\ [mK]$")
+        plt.legend()
+        plt.title(r"fit $m_\chi$ from observed global $\delta T_b$ with $\sigma_{\rm noise}$"+" = {} mK".format(noise))
+        plt.show()
+        
+        plt.hist(param_fits, density = True, bins=20)
+        mean = np.average(param_fits)
+        median = np.median(param_fits)
+        std = np.std(param_fits)
+        
+        plt.title("distribution of {} fitting values for dark matter mass".format(repeat))
+        plt.axvline(param_true, c='r', linestyle='-', label='real = '+'{} GeV'.format(param_true[0]))
+        plt.axvline(mean, c='k', linestyle='--', label='mean = '+'{:.3f} GeV'.format(mean))
+        plt.axvline(median, c='gold', linestyle='-.', label='median = '+'{:.3f} GeV'.format(median))
+        plt.axvline(mean+std, c='k', linestyle=':', label=r'mean $\pm$ std')
+        plt.axvline(mean-std, c='k', linestyle=':')
+        plt.legend()
+        plt.xlabel(r"$m_{\chi}$ [GeV]")
+        plt.ylabel("pdf")
+        plt.savefig("{}.png".format(param_true[0]*10))
+        plt.show()
+    else:
+        return param_fit
 
 
 # In[4]:
@@ -239,4 +246,4 @@ def demonstrate():
 
 
 if __name__ == '__main__':
-    test([0.5], mpi=False)
+    test([0.5, 29000], mpi=False, plot=False)
