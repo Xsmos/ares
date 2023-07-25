@@ -44,11 +44,11 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True, V_rms = 29000):
     # default = ares.simulations.Global21cm(verbose=False, radiative_transfer=False)
     # default.run()
 
-    print("dark_matter_mass = {} GeV".format(m_chi), end='')
+    # print("dark_matter_mass = {} GeV".format(m_chi), end='')
     start_time = time.time()
 
     if not mpi:
-        print("\nOnly 1 CPU is working...", end='')
+        print("Only 1 CPU is working...", end='')
         for i, initial_v_stream in enumerate(initial_v_stream_list):
             if verbose:
                 print("\ninitial_v_stream =", initial_v_stream, 'm/s', end='')
@@ -68,7 +68,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10, mpi=0, verbose=True, V_rms = 29000):
             # dTb_dict[initial_v_stream] = np.interp(z_array, sim.history['z'][::-1], sim.history['dTb'][::-1])
             # sim_dict[initial_v_stream].save()
     else:
-        print("\n{} CPUs working in parallel...".format("Multiple"), end='')
+        print("{} CPUs working in parallel...".format("Multiple"), end='')
         # print("\n{} CPUs working...".format(multiprocessing.cpu_count()), end='')
         global f_mpi
 
@@ -105,7 +105,7 @@ def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_stream
         dTb_random_v_stream(m_chi, N=more_random_v_streams, mpi=mpi, verbose=verbose, V_rms=V_rms)
 
     file_names = os.listdir(path)
-    print("Preprocessing {} files of dTb for m_chi = {} GeV...".format(len(file_names), m_chi))
+    # print("Preprocessing {} files of dTb for m_chi = {} GeV...".format(len(file_names), m_chi))
 
     z_array = np.linspace(10, 1010, N_z)
 
@@ -117,7 +117,7 @@ def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_stream
         else:
             all_dTb_interp = np.vstack((all_dTb_interp, dTb_interp))
 
-    print("{} files have been interpolated.".format(all_dTb_interp.shape[0]))
+    # print("{} files have been interpolated.".format(all_dTb_interp.shape[0]))
     print("---"*15)
     dTb_averaged = np.average(all_dTb_interp, axis=0)
 

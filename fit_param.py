@@ -18,7 +18,7 @@ import time
 # In[2]:
 
 
-def interp_dTb(param, z, mpi=True, adequate_random_v_streams=20):
+def interp_dTb(param, z, mpi=True, adequate_random_v_streams=16):
     """
     functions:
     1. generate adequate random stream velocities subject to 3D Gaussian distribution;
@@ -46,7 +46,7 @@ def interp_dTb(param, z, mpi=True, adequate_random_v_streams=20):
         print("{} random v_streams will be generated for m_chi = {} GeV and V_rms = {} m/s...".format(more_random_v_streams, m_chi, V_rms))
     
     if more_random_v_streams:
-        z_array, dTb_averaged, m_chi = average_dTb(m_chi=m_chi, more_random_v_streams=more_random_v_streams, mpi=mpi, verbose=False, V_rms=V_rms)
+        z_array, dTb_averaged, m_chi = average_dTb(m_chi=m_chi, more_random_v_streams=more_random_v_streams, mpi=mpi, verbose=True, V_rms=V_rms)
     
     dTb = np.interp(z, z_array, dTb_averaged)
     return dTb
@@ -55,7 +55,7 @@ def residual(param, z_sample, dTb_sample, mpi=True):
     residual = interp_dTb(param, z_sample, mpi) - dTb_sample
     return residual
 
-def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0,0], [10,29000*2]), mpi=True):
+def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0,29000*(1-1/np.sqrt(3))], [10,29000*(1+1/np.sqrt(3))]), mpi=True):
     '''
     fit the parameter(s) by z_sample and dTb_sample via scipy.optimize.least_squares.
     '''
