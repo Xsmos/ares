@@ -52,7 +52,7 @@ def interp_dTb(param, z, cores=True, adequate_random_v_streams=100):  # 200 by d
 
     if more_random_v_streams:
         z_array, dTb_averaged, m_chi = average_dTb(
-            m_chi=m_chi, more_random_v_streams=more_random_v_streams, cores=cores, verbose=True, V_rms=V_rms)
+            m_chi=m_chi, more_random_v_streams=more_random_v_streams, cores=cores, verbose=False, V_rms=V_rms)
 
     dTb = np.interp(z, z_array, dTb_averaged)
     return dTb

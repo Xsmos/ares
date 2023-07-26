@@ -33,20 +33,14 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000):
     cov = np.eye(3, 3) * V_rms**2 / 3
     initial_v_stream_list = np.random.multivariate_normal(mean, cov, N)
     initial_v_stream_list = np.sqrt(np.sum(initial_v_stream_list**2, axis=1))
-    # print(mean, cov, initial_v_stream_list.shape)
-    # print(initial_v_stream_list)
-    # initial_v_stream_list = abs(initial_v_stream_list)
-    # sim_dict = {initial_v_stream:0 for initial_v_stream in initial_v_stream_list}
-
-    # z_array = np.linspace(6, 300, N_z)
-    # dTb_dict = {initial_v_stream:0 for initial_v_stream in initial_v_stream_list}
-
-    # default = ares.simulations.Global21cm(verbose=False, radiative_transfer=False)
-    # default.run()
 
     # print("dark_matter_mass = {} GeV".format(m_chi), end='')
-    start_time = time.time()
+    
+    path = "./average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(V_rms, m_chi)
+    if not os.path.exists(path):
+        os.makedirs(path)
 
+    start_time = time.time()
     if cores == 1:
         print("1 CPU working...", end='')
         for i, initial_v_stream in enumerate(initial_v_stream_list):
@@ -58,10 +52,10 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000):
             # sim = sim_dict[initial_v_stream]
             sim.run()
 
-            path = "./average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(
-                V_rms, sim.pf['dark_matter_mass'])
-            if not os.path.exists(path):
-                os.makedirs(path)
+            # path = "./average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(
+            #     V_rms, sim.pf['dark_matter_mass'])
+            # if not os.path.exists(path):
+            #     os.makedirs(path)
 
             np.save(path+"/{:.3f}".format(initial_v_stream),
                     np.vstack((sim.history["z"], sim.history["dTb"])))
@@ -88,10 +82,10 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000):
             # sim = sim_dict[initial_v_stream]
             sim.run()
 
-            path = "./average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(
-                V_rms, sim.pf['dark_matter_mass'])
-            if not os.path.exists(path):
-                os.makedirs(path)
+            # path = "./average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(
+            #     V_rms, sim.pf['dark_matter_mass'])
+            # if not os.path.exists(path):
+            #     os.makedirs(path, exist_ok=True)
 
             np.save(path+"/{:.3f}".format(initial_v_stream),
                     np.vstack((sim.history["z"], sim.history["dTb"])))
