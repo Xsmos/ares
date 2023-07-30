@@ -6,12 +6,12 @@ import os
 from scipy import interpolate
 import multiprocessing
 from multiprocessing import Pool
+import warnings
 
 # V_rms = 29000  # m/s
 # N = 5  # number of initial_v_stream
 
-
-def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000):
+def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, average_dir='.'):
     """
     randomly generate N initial_v_streams and calculate their 21cm temperatures with dark_matter_heating.
     """
@@ -36,7 +36,8 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000):
 
     # print("dark_matter_mass = {} GeV".format(m_chi), end='')
     
-    path = "./average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(V_rms, m_chi)
+    path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, V_rms, m_chi)
+    # print(__name__, ': average_path =', path)
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -102,11 +103,12 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000):
         time_elapse, N, number_of_CPUs))
 
 
-def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_streams=10, cores=1, verbose=True, V_rms=29000):
-    path = "./average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(V_rms, m_chi)
+def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_streams=10, cores=1, verbose=True, V_rms=29000, average_dir="."):
+    warnings.simplefilter("ignore", UserWarning)
+    path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, V_rms, m_chi)
     if not os.path.exists(path) or more_random_v_streams:
         dTb_random_v_stream(m_chi, N=more_random_v_streams,
-                            cores=cores, verbose=verbose, V_rms=V_rms)
+                            cores=cores, verbose=verbose, V_rms=V_rms, average_dir=average_dir)
 
     file_names = os.listdir(path)
     # print("Preprocessing {} files of dTb for m_chi = {} GeV...".format(len(file_names), m_chi))

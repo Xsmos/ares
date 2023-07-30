@@ -17,8 +17,9 @@ import time
 
 # In[2]:
 
+average_path = '.'
 
-def interp_dTb(param, z, cores=True, adequate_random_v_streams=100):  # 200 by default
+def interp_dTb(param, z, cores=True, adequate_random_v_streams=200):  # 200 by default
     """
     functions:
     1. generate adequate random stream velocities subject to 3D Gaussian distribution;
@@ -27,7 +28,7 @@ def interp_dTb(param, z, cores=True, adequate_random_v_streams=100):  # 200 by d
     """
     m_chi, V_rms = param
 
-    directory = "average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(V_rms, m_chi)
+    directory = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_path, V_rms, m_chi)
     if os.path.exists(directory):
         if np.size(os.listdir(directory)) < adequate_random_v_streams:
             more_random_v_streams = adequate_random_v_streams - \
@@ -52,7 +53,7 @@ def interp_dTb(param, z, cores=True, adequate_random_v_streams=100):  # 200 by d
 
     if more_random_v_streams:
         z_array, dTb_averaged, m_chi = average_dTb(
-            m_chi=m_chi, more_random_v_streams=more_random_v_streams, cores=cores, verbose=False, V_rms=V_rms)
+            m_chi=m_chi, more_random_v_streams=more_random_v_streams, cores=cores, verbose=False, V_rms=V_rms, average_dir=average_path)
 
     dTb = np.interp(z, z_array, dTb_averaged)
     return dTb
@@ -63,11 +64,13 @@ def residual(param, z_sample, dTb_sample, cores=True):
     return residual
 
 
-def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 29000*(1-1/np.sqrt(3))], [10, 29000*(1+1/np.sqrt(3))]), cores=True):
+def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 29000*(1-1/np.sqrt(3))], [10, 29000*(1+1/np.sqrt(3))]), cores=1, average_dir='.'):
     '''
     fit the parameter(s) by z_sample and dTb_sample via scipy.optimize.least_squares.
     '''
     warnings.simplefilter("ignore", UserWarning)
+    global average_path
+    average_path = average_dir
 
     if z_sample.ndim == 1 and dTb_sample.ndim != 1:
         z_sample = np.tile(z_sample, (dTb_sample.shape[0], 1))
@@ -115,12 +118,14 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 29000*
 # In[3]:
 
 
-def test(param_true=[0.15, 29000], noise=3, cores=True, z_sample=np.arange(10, 300, 5), stop_plot=5, repeat=20, plot=True):
+def test(param_true=[0.15, 29000], noise=3, cores=-1, z_sample=np.arange(10, 300, 5), stop_plot=5, repeat=20, plot=True, average_dir="."):
     """
     functions:
     1. test the fit_param();
     2. showed that fit_param() works well for m_chi < 1 GeV. 
     """
+    print("param_true =", param_true)
+    
     # sampling
     dTb_accurate = interp_dTb(param_true, z_sample, cores)
     dTb_sample = dTb_accurate + noise * \
@@ -129,9 +134,10 @@ def test(param_true=[0.15, 29000], noise=3, cores=True, z_sample=np.arange(10, 3
     # fitting
     # param_fit, success, status = fit_param(z_sample, dTb_sample, cores=cores)
     start_time = time.time()
-    param_fits = fit_param(z_sample, dTb_sample, cores=cores)
+    param_fits = fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir)
     end_time = time.time()
-    # print("param_fits =", param_fits)
+    
+    np.savetxt("m_chi{}_V_rms{}_{}.txt".format(param_true[0], param_true[1], time.strftime('%H:%M:%S', time.localtime(time.time()))), param_fits)
 
     # take the average
     if param_fits.ndim <= 1:
@@ -144,7 +150,7 @@ def test(param_true=[0.15, 29000], noise=3, cores=True, z_sample=np.arange(10, 3
     # print('success =', success)
     # print('status =', status)
 
-    if plot:
+    if False:
         plt.figure(dpi=120)
         sim = ares.simulations.Global21cm(
             radiative_transfer=False, verbose=False)
@@ -190,8 +196,6 @@ def test(param_true=[0.15, 29000], noise=3, cores=True, z_sample=np.arange(10, 3
         plt.ylabel("pdf")
         plt.savefig("{}.png".format(param_true[0]*10))
         plt.show()
-    else:
-        return param_fits
 
 
 # In[4]:
@@ -273,4 +277,4 @@ def demonstrate():
 
 
 if __name__ == '__main__':
-    test([0.5, 29000], cores=False, plot=False)
+    test([0.5, 29000], cores=-1, repeat=300)
