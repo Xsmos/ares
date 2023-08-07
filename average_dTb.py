@@ -36,7 +36,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
 
     # print("dark_matter_mass = {} GeV".format(m_chi), end='')
     
-    path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, V_rms, m_chi)
+    path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, round(V_rms,-1), m_chi)
     # print(__name__, ': average_path =', path)
     if not os.path.exists(path):
         os.makedirs(path)
@@ -105,7 +105,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
 
 def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_streams=10, cores=1, verbose=True, V_rms=29000, average_dir="."):
     warnings.simplefilter("ignore", UserWarning)
-    path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, V_rms, m_chi)
+    path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, round(V_rms,-1), m_chi)
     if not os.path.exists(path) or more_random_v_streams:
         dTb_random_v_stream(m_chi, N=more_random_v_streams,
                             cores=cores, verbose=verbose, V_rms=V_rms, average_dir=average_dir)

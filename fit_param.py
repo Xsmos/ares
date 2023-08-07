@@ -13,7 +13,7 @@ import os
 import random
 import warnings
 import time
-
+from npy_append_array import NpyAppendArray
 
 # In[2]:
 
@@ -27,8 +27,9 @@ def interp_dTb(param, z, cores=True, adequate_random_v_streams=200):  # 200 by d
     3. interpolate dTb by input 'z'.
     """
     m_chi, V_rms = param
+    # V_rms = int(round(V_rms,-1)) # accuracy: 10 m/s
 
-    directory = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_path, V_rms, m_chi)
+    directory = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_path, round(V_rms,-1), m_chi)
     if os.path.exists(directory):
         if np.size(os.listdir(directory)) < adequate_random_v_streams:
             more_random_v_streams = adequate_random_v_streams - \
@@ -64,7 +65,7 @@ def residual(param, z_sample, dTb_sample, cores=True):
     return residual
 
 
-def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 29000*(1-1/np.sqrt(3))], [10, 29000*(1+1/np.sqrt(3))]), cores=1, average_dir='.'):
+def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 29000*(1-1/np.sqrt(3))], [10, 29000*(1+1/np.sqrt(3))]), cores=1, average_dir='.', delete_if_exists=False, save_name="fitted_m_chi_V_rms.npy"):
     '''
     fit the parameter(s) by z_sample and dTb_sample via scipy.optimize.least_squares.
     '''
@@ -103,22 +104,25 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 29000*
         print('---'*30)
 
         if res.success:
+            with NpyAppendArray(save_name, delete_if_exists=delete_if_exists) as npaa:
+                npaa.append(np.array([res.x]))
+                # data = np.load(filename, mmap_mode="r")
             # fitting_results_txt.write("{} ".format(res.x[0]))
-            if "fitting_results" not in vars():
-                fitting_results = res.x
-            else:
-                fitting_results = np.vstack((fitting_results, res.x))
+#             if "fitting_results" not in vars():
+#                 fitting_results = res.x
+#             else:
+#                 fitting_results = np.vstack((fitting_results, res.x))
     # fitting_results_txt.close()
     # fitting_results = np.loadtxt("fitting_results.txt")
     # fitting_result = np.average(fitting_results)
-#     print('return:', fitting_results)
-    return fitting_results
+    # print('return:', fitting_results)
+    return
 
 
 # In[3]:
 
 
-def test(param_true=[0.15, 29000], noise=3, cores=-1, z_sample=np.arange(10, 300, 5), stop_plot=5, repeat=20, plot=True, average_dir="."):
+def test(param_true=[0.15, 29000], noise=3, cores=-1, z_sample=np.arange(10, 300, 5), stop_plot=5, repeat=20, plot=True, average_dir=".", delete_if_exists=False):
     """
     functions:
     1. test the fit_param();
@@ -134,19 +138,19 @@ def test(param_true=[0.15, 29000], noise=3, cores=-1, z_sample=np.arange(10, 300
     # fitting
     # param_fit, success, status = fit_param(z_sample, dTb_sample, cores=cores)
     start_time = time.time()
-    param_fits = fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir)
+    fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir, delete_if_exists=delete_if_exists, save_name="m_chi{:.2f}_V_rms{:.0f}.npy".format(param_true[0],param_true[1]))
     end_time = time.time()
     
-    np.savetxt("m_chi{}_V_rms{}_{}.txt".format(param_true[0], param_true[1], time.strftime('%H:%M:%S', time.localtime(time.time()))), param_fits)
+    # np.savetxt("m_chi{:.2f}_V_rms{:.0f}.txt".format(param_true[0], param_true[1]), param_fits)
 
     # take the average
-    if param_fits.ndim <= 1:
-        param_fit = np.array([np.average(param_fits, axis=0)])
-    else:
-        param_fit = np.average(param_fits, axis=0)
+#     if param_fits.ndim <= 1:
+#         param_fit = np.array([np.average(param_fits, axis=0)])
+#     else:
+#         param_fit = np.average(param_fits, axis=0)
 
-    print("It costs {:.0f} seconds to achieve param_fit = {}".format(
-        end_time-start_time, param_fit))
+    print("It costs {:.0f} seconds to complete the calculation.".format(
+        end_time-start_time))
     # print('success =', success)
     # print('status =', status)
 
@@ -201,7 +205,7 @@ def test(param_true=[0.15, 29000], noise=3, cores=-1, z_sample=np.arange(10, 300
 # In[4]:
 
 
-def demonstrate():
+def demonstrate(file_dir="average_dTb/V_rms29000/m_chi0.10", N = [100, 200, 300, 400, 500, 600, 700]):
     """
     functions:
     1. show how many random velocities are required to achieve stable and accurate dTb_averaged;
@@ -210,19 +214,19 @@ def demonstrate():
     z_array = np.linspace(10, 1010, 1000)
 
     try:
-        file_names = os.listdir("average_dTb/m_chi0.62")
+        file_names = os.listdir(file_dir)
     except FileNotFoundError:
         print(
             "Interrupt demonstrate() if you don't want following steps to cost long time.")
-        average_dTb(m_chi=0.62, more_random_v_streams=400,
+        average_dTb(m_chi=0.10, more_random_v_streams=400,
                     cores=1, verbose=False)
-        file_names = os.listdir("average_dTb/m_chi0.62")
+        file_names = os.listdir(file_dir)
 
     print("file_names[:5] =", file_names[:5])
     random.shuffle(file_names)
     print("After shuffling, file_names[:5] =", file_names[:5])
     for file_name in file_names:
-        data = np.load("./average_dTb/m_chi0.62/{}".format(file_name))
+        data = np.load(file_dir+"/{}".format(file_name))
         dTb_interp = np.interp(z_array, data[0][::-1], data[1][::-1])
         if "all_dTb_interp" not in vars():
             all_dTb_interp = dTb_interp.copy()
@@ -232,8 +236,6 @@ def demonstrate():
 
     plt.figure(figsize=(15, 4), dpi=150)
 
-    N = [100, 200, 300]
-
     plt.subplot(131)
     v_streams = np.array([float(name[:-4]) for name in file_names])
     plt.title(
@@ -241,7 +243,7 @@ def demonstrate():
     for i in range(len(N)):
         V_sample_rms = np.sqrt(np.average(v_streams[:N[i]]**2))/1000
         plt.hist(v_streams[:N[i]]/1000, label="N={}, ".format(N[i])+r"$\sqrt{\overline{V^2}}$" +
-                 "={:.1f}km/s".format(V_sample_rms), density=True, histtype='step', bins=10)
+                 "={:.1f}km/s".format(V_sample_rms), density=True, histtype='step', bins=20)
     plt.legend()
     plt.xlabel("stream velocity [km/s]")
     plt.ylabel('probability density')
@@ -259,7 +261,7 @@ def demonstrate():
     plt.xlim(0, 300)
 
     plt.subplot(133)
-    N = np.arange(10, 500, 5)
+    N = np.arange(10, 2000, 20)
     dTb_averaged = [np.average(all_dTb_interp[:N[i]], axis=0)
                     for i in range(len(N))]
     # print(np.shape(dTb_averaged))
@@ -277,4 +279,4 @@ def demonstrate():
 
 
 if __name__ == '__main__':
-    test([0.5, 29000], cores=-1, repeat=300)
+    test([0.15, 33000], cores=-1, repeat=100, plot=False, average_dir = '.', delete_if_exists=False)
