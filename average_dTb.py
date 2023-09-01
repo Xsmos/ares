@@ -7,9 +7,11 @@ from scipy import interpolate
 import multiprocessing
 from multiprocessing import Pool
 import warnings
+import shutil
 
 # V_rms = 29000  # m/s
 # N = 5  # number of initial_v_stream
+
 
 def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, average_dir='.'):
     """
@@ -35,8 +37,9 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
     initial_v_stream_list = np.sqrt(np.sum(initial_v_stream_list**2, axis=1))
 
     # print("dark_matter_mass = {} GeV".format(m_chi), end='')
-    
-    path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, round(V_rms,-1), m_chi)
+
+    path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(
+        average_dir, round(V_rms, -1), m_chi)
     # print(__name__, ': average_path =', path)
     if not os.path.exists(path):
         os.makedirs(path)
@@ -103,10 +106,11 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
         time_elapse, N, number_of_CPUs))
 
 
-def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_streams=10, cores=1, verbose=True, V_rms=29000, average_dir="."):
+def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores=1, verbose=True, V_rms=29000, average_dir="."):
     warnings.simplefilter("ignore", UserWarning)
-    path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, round(V_rms,-1), m_chi)
-    if not os.path.exists(path) or more_random_v_streams:
+    path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(
+        average_dir, round(V_rms, -1), m_chi)
+    if not os.path.exists(path+'.npy') or more_random_v_streams:
         dTb_random_v_stream(m_chi, N=more_random_v_streams,
                             cores=cores, verbose=verbose, V_rms=V_rms, average_dir=average_dir)
 
@@ -125,11 +129,23 @@ def average_dTb(m_chi=0.1, N_z=1000, plot=False, save=True, more_random_v_stream
 
     # print("{} files have been interpolated.".format(all_dTb_interp.shape[0]))
     print("---"*15)
-    dTb_averaged = np.average(all_dTb_interp, axis=0)
+    # dTb_averaged = np.average(all_dTb_interp, axis=0)
 
-    if save:
-        np.save(path+"_averaged".format(m_chi),
-                np.vstack((z_array, dTb_averaged)))
+    # update and save data
+    if not os.path.exists(path+'.npy'):
+        np.save(path, np.vstack((z_array, all_dTb_interp)))
+    else:
+        old_data = np.load(path+'.npy')
+        new_data = np.vstack((old_data, all_dTb_interp))
+        np.save(path, new_data)
+
+    # calculate the averaged value
+    data = np.load(path+'.npy')
+    dTb_averaged = np.average(data[1:,:], axis=0)
+    np.save(path+"_averaged".format(m_chi),
+            np.vstack((z_array, dTb_averaged)))
+    shutil.rmtree(path, ignore_errors=True)
+    # print(__name__ + ": Files in " + path + " have been removed.")
 
     if plot:
         z, T = np.load(path+"_averaged.npy")
@@ -158,7 +174,7 @@ if __name__ == "__main__":
     # fig.figure(dpi = 150)
 
     for m_chi in m_chi_list:
-        z, T, m_chi = average_dTb(m_chi, more_random_v_streams=5, cores=4)
+        z, T, m_chi = average_dTb(m_chi, more_random_v_streams=2, cores=4)
         ax.plot(z, T, label='$m_{\chi}$'+' = {} GeV'.format(m_chi),
                 color=color_dict[m_chi], linewidth=3, linestyle=style_dict[m_chi])
         print("---"*30)

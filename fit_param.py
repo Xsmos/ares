@@ -19,7 +19,7 @@ from npy_append_array import NpyAppendArray
 
 average_path = '.'
 
-def interp_dTb(param, z, cores=True, adequate_random_v_streams=200):  # 200 by default
+def interp_dTb(param, z, cores=True, adequate_random_v_streams=10):  # 200 by default
     """
     functions:
     1. generate adequate random stream velocities subject to 3D Gaussian distribution;
@@ -30,10 +30,10 @@ def interp_dTb(param, z, cores=True, adequate_random_v_streams=200):  # 200 by d
     # V_rms = int(round(V_rms,-1)) # accuracy: 10 m/s
 
     directory = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_path, round(V_rms,-1), m_chi)
-    if os.path.exists(directory):
-        if np.size(os.listdir(directory)) < adequate_random_v_streams:
-            more_random_v_streams = adequate_random_v_streams - \
-                np.size(os.listdir(directory))
+    if os.path.exists(directory+'.npy'):
+        data = np.load(directory+'.npy')
+        if data.shape[0]-1 < adequate_random_v_streams:
+            more_random_v_streams = adequate_random_v_streams - (data.shape[0]-1)
             print("{} more random v_streams will be generated for m_chi = {} GeV and V_rms = {} m/s...".format(
                 more_random_v_streams, m_chi, V_rms))
         else:
