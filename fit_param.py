@@ -19,7 +19,7 @@ from npy_append_array import NpyAppendArray
 
 average_path = '.'
 
-def interp_dTb(param, z, cores=True, adequate_random_v_streams=10):  # 200 by default
+def interp_dTb(param, z, cores=True, adequate_random_v_streams=200):  # 200 by default
     """
     functions:
     1. generate adequate random stream velocities subject to 3D Gaussian distribution;
@@ -100,7 +100,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 29000*
         end_time = time.time()
 
         print('#{}'.format(i+1), ', fit:', res.x, ', success:', res.success,
-              ', status:', res.status, ', cost {} seconds'.format(end_time-start_time))
+              ', status:', res.status, f', cost {(end_time-start_time)/60:.2f} min')
         print('---'*30)
 
         if res.success:
@@ -149,8 +149,7 @@ def test(param_true=[0.15, 29000], noise=3, cores=-1, z_sample=np.arange(10, 300
 #     else:
 #         param_fit = np.average(param_fits, axis=0)
 
-    print("It costs {:.0f} seconds to complete the calculation.".format(
-        end_time-start_time))
+    print(f"It costs {(end_time-start_time)/3600:.3f} hours to complete the calculation.")
     # print('success =', success)
     # print('status =', status)
 
@@ -279,4 +278,12 @@ def demonstrate(file_dir="average_dTb/V_rms29000/m_chi0.10", N = [100, 200, 300,
 
 
 if __name__ == '__main__':
-    test([0.15, 33000], cores=-1, repeat=100, plot=False, average_dir = '.', delete_if_exists=False)
+#     for m_chi in np.logspace(-2, 0, 5):
+#         for V_rms in np.linspace(29000-5000, 29000+5000, 5):
+#             param_fits = test([m_chi, V_rms], cores=-1, repeat=30, plot=False, average_dir = '.', delete_if_exists=False)
+    for m_chi in np.logspace(-2, 0, 3):
+        for V_rms in np.linspace(29000-10000, 29000+10000, 3):
+            param_fits = test([m_chi, V_rms], cores=-1, repeat=30, plot=False, average_dir = '.', delete_if_exists=False)
+
+
+
