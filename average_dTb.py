@@ -160,7 +160,7 @@ def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores
         plt.legend()
         plt.show()
     else:
-        return (z_array, dTb_averaged, m_chi)
+        return (z_array, dTb_averaged, m_chi, V_rms)
 
 
 if __name__ == "__main__":
