@@ -8,9 +8,7 @@ class test_ares():
             self.m_chi = self.kwargs['dark_matter_mass']
         if 'initial_v_stream' in self.kwargs:
             self.v = self.kwargs['initial_v_stream']
-        self.history = {}
 
     def run(self):
-        self.history['z'] = np.linspace(400, 0, 401)
-        # self.history['dTb'] = -0.02 * (29000/self.v) * self.history['z']**2 * np.exp(-(self.history['z']/80)**2 * self.m_chi/0.1)
-        self.history['dTb'] = -0.02 * self.history['z']**2 * np.exp(-(self.history['z']/80)**2) / (self.v/29000) / (self.m_chi/0.1)
+        self.history['z'] = np.linspace(0, 400)
+        self.history['dTb'] = -0.02 * (29000/self.v) * self.history['z']**2 * np.exp(-(self.history['z']/80)**2 * self.m_chi/0.1)

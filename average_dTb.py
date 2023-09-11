@@ -8,6 +8,7 @@ import multiprocessing
 from multiprocessing import Pool
 import warnings
 import shutil
+from test_ares import test_ares
 
 # V_rms = 29000  # m/s
 # N = 5  # number of initial_v_stream
@@ -51,8 +52,8 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
             if verbose:
                 print("\ninitial_v_stream =", initial_v_stream, 'm/s', end='')
 
-            sim = ares.simulations.Global21cm(
-                initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
+            # sim = ares.simulations.Global21cm(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
+            sim = test_ares(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi)
             # sim = sim_dict[initial_v_stream]
             sim.run()
 
@@ -60,7 +61,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
             #     V_rms, sim.pf['dark_matter_mass'])
             # if not os.path.exists(path):
             #     os.makedirs(path)
-
+            # print(__name__, "dTb =", sim.history['dTb'])
             np.save(path+"/{:.3f}".format(initial_v_stream),
                     np.vstack((sim.history["z"], sim.history["dTb"])))
 
@@ -122,6 +123,7 @@ def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores
     for file_name in file_names:
         data = np.load(path+"/{}".format(file_name))
         dTb_interp = np.interp(z_array, data[0][::-1], data[1][::-1])
+        # print(__name__, 'dTb_interp =', dTb_interp)
         if "all_dTb_interp" not in vars():
             all_dTb_interp = dTb_interp.copy()
         else:
@@ -142,6 +144,7 @@ def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores
     # calculate the averaged value
     data = np.load(path+'.npy')
     dTb_averaged = np.average(data[1:,:], axis=0)
+    # print(__name__, 'dTb_averaged =', dTb_averaged)
     np.save(path+"_averaged".format(m_chi),
             np.vstack((z_array, dTb_averaged)))
     shutil.rmtree(path, ignore_errors=True)

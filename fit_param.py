@@ -20,6 +20,7 @@ from itertools import product
 
 average_path = '.'
 
+
 def interp_dTb(param, z, cores=True, adequate_random_v_streams=200):  # 200 by default
     """
     functions:
@@ -30,11 +31,13 @@ def interp_dTb(param, z, cores=True, adequate_random_v_streams=200):  # 200 by d
     m_chi, V_rms = param
     # V_rms = int(round(V_rms,-1)) # accuracy: 10 m/s
 
-    directory = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_path, round(V_rms,-1), m_chi)
+    directory = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(
+        average_path, round(V_rms, -1), m_chi)
     if os.path.exists(directory+'.npy'):
         data = np.load(directory+'.npy')
         if data.shape[0]-1 < adequate_random_v_streams:
-            more_random_v_streams = adequate_random_v_streams - (data.shape[0]-1)
+            more_random_v_streams = adequate_random_v_streams - \
+                (data.shape[0]-1)
             print("{} more random v_streams will be generated for m_chi = {} GeV and V_rms = {} m/s...".format(
                 more_random_v_streams, m_chi, V_rms))
         else:
@@ -97,7 +100,10 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 29000*
 
         start_time = time.time()
         # res = least_squares(residual, param_guess, diff_step=0.1, bounds=bounds, xtol=1e-3, args=(args_z, args_dTb, cores))
-        res = least_squares(residual, param_guess, diff_step=0.1, bounds=bounds, args=(args_z, args_dTb, cores))
+        res = least_squares(residual, param_guess, diff_step=0.1,
+                            bounds=bounds, args=(args_z, args_dTb, cores))
+        # res = least_squares(residual, param_guess, bounds=bounds, args=(args_z, args_dTb, cores))
+
         end_time = time.time()
 
         print('#{}'.format(i+1), ', fit:', res.x, ', success:', res.success,
@@ -123,14 +129,14 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 29000*
 # In[3]:
 
 
-def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 300, 2), stop_plot=5, repeat=20, plot=True, average_dir=".", delete_if_exists=False):
+def test(param_true=[0.15, 29000], noise=5, cores=-1, z_sample=np.arange(10, 300, 2), stop_plot=5, repeat=20, plot=True, average_dir=".", delete_if_exists=False):
     """
     functions:
     1. test the fit_param();
     2. showed that fit_param() works well for m_chi < 1 GeV. 
     """
     print("param_true =", param_true)
-    
+
     # sampling
     dTb_accurate = interp_dTb(param_true, z_sample, cores)
     dTb_sample = dTb_accurate + noise * \
@@ -139,9 +145,10 @@ def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 
     # fitting
     # param_fit, success, status = fit_param(z_sample, dTb_sample, cores=cores)
     start_time = time.time()
-    fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir, delete_if_exists=delete_if_exists, save_name="m_chi{:.2f}_V_rms{:.0f}.npy".format(param_true[0],param_true[1]))
+    fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir, delete_if_exists=delete_if_exists,
+              save_name="m_chi{:.2f}_V_rms{:.0f}.npy".format(param_true[0], param_true[1]))
     end_time = time.time()
-    
+
     # np.savetxt("m_chi{:.2f}_V_rms{:.0f}.txt".format(param_true[0], param_true[1]), param_fits)
 
     # take the average
@@ -150,7 +157,8 @@ def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 
 #     else:
 #         param_fit = np.average(param_fits, axis=0)
 
-    print(f"It costs {(end_time-start_time)/3600:.3f} hours to complete the calculation.")
+    print(
+        f"It costs {(end_time-start_time)/3600:.3f} hours to complete the calculation.")
     # print('success =', success)
     # print('status =', status)
 
@@ -205,7 +213,7 @@ def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 
 # In[4]:
 
 
-def demonstrate(file_dir="average_dTb/V_rms29000/m_chi0.10", N = [100, 200, 300, 400, 500, 600, 700]):
+def demonstrate(file_dir="average_dTb/V_rms29000/m_chi0.10", N=[100, 200, 300, 400, 500, 600, 700]):
     """
     functions:
     1. show how many random velocities are required to achieve stable and accurate dTb_averaged;
@@ -279,18 +287,18 @@ def demonstrate(file_dir="average_dTb/V_rms29000/m_chi0.10", N = [100, 200, 300,
 
 
 if __name__ == '__main__':
-    #for m_chi in np.logspace(-2, 0, 3):
+    # for m_chi in np.logspace(-2, 0, 3):
     #    for V_rms in np.linspace(29000-10000, 29000+10000, 3):
     #        param_fits = test([m_chi, V_rms], cores=-1, repeat=30, plot=False, average_dir = '.', delete_if_exists=False)
 
     idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
     print("SLURM_ARRAY_TASK_ID", os.environ["SLURM_ARRAY_TASK_ID"])
 
-    m_chi_array = np.logspace(-2,0,3)
+    m_chi_array = np.logspace(-2, 0, 3)
     V_rms_array = np.linspace(29000-10000, 29000+10000, 3)
     parameters = list(product(m_chi_array, V_rms_array))
 
     myparam = parameters[idx]
     print("myparam =", myparam)
-    param_fits = test(myparam, cores=-1, repeat=30, plot=False, average_dir = '.', delete_if_exists=False)
-
+    param_fits = test(myparam, cores=-1, repeat=30, plot=False,
+                      average_dir='.', delete_if_exists=False)
