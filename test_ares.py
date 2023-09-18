@@ -16,3 +16,4 @@ class test_ares():
         # self.history['dTb'] = (29000/self.v)**2 * self.history['z'] + self.m_chi/0.1*200
         self.history['dTb'] = -0.02 * (29000/self.v) * self.history['z']**2 * np.exp(-(self.history['z']/80)**2 * self.m_chi/0.1)
         # self.history['dTb'] = -0.02 * self.history['z']**2 * np.exp(-(self.history['z']/80)**2) / (self.v/29000) / (self.m_chi/0.1)
+        # self.history['dTb'] = self.v / (1+np.exp(-self.m_chi*(self.history['z']-80))) 

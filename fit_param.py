@@ -31,8 +31,9 @@ def interp_dTb(param, z, cores=True, adequate_random_v_streams=2):  # 200 by def
     m_chi, V_rms = param
     # V_rms = int(round(V_rms,-1)) # accuracy: 10 m/s
 
-    directory = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(
-        average_path, round(V_rms, -1), m_chi)
+    directory = "{}/average_dTb/V_rms{}/m_chi{}".format(average_path, V_rms, m_chi)
+    # print("__name__: directory =", directory)
+    # directory = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_path, round(V_rms, -1), m_chi)
     if os.path.exists(directory+'.npy'):
         data = np.load(directory+'.npy')
         if data.shape[0]-1 < adequate_random_v_streams:
@@ -69,7 +70,7 @@ def residual(param, z_sample, dTb_sample, cores=True):
     return residual
 
 
-def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 29000*(1-1/np.sqrt(3))], [10, 29000*(1+1/np.sqrt(3))]), cores=1, average_dir='.', delete_if_exists=False, save_name="fitted_m_chi_V_rms.npy"):
+def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [10, np.infty]), cores=1, average_dir='.', delete_if_exists=False, save_name="fitted_m_chi_V_rms.npy"):
     '''
     fit the parameter(s) by z_sample and dTb_sample via scipy.optimize.least_squares.
     '''
@@ -100,9 +101,9 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 29000*
 
         start_time = time.time()
         # res = least_squares(residual, param_guess, diff_step=0.1, bounds=bounds, xtol=1e-3, args=(args_z, args_dTb, cores))
-        # res = least_squares(residual, param_guess, diff_step=0.1, bounds=bounds, args=(args_z, args_dTb, cores))
-        res = least_squares(residual, param_guess,
-                            bounds=bounds, args=(args_z, args_dTb, cores))
+        # res = least_squares(residual, param_guess, diff_step=1, bounds=bounds, args=(args_z, args_dTb, cores))
+        # res = least_squares(residual, param_guess, bounds=bounds, args=(args_z, args_dTb, cores))
+        res = least_squares(residual, param_guess, bounds=bounds, args=(args_z, args_dTb, cores))
 
         end_time = time.time()
 
@@ -129,7 +130,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 29000*
 # In[3]:
 
 
-def test(param_true=[0.15, 29000], noise=0.0001, cores=-1, z_sample=np.arange(10, 300, 2), stop_plot=5, repeat=20, plot=True, average_dir=".", delete_if_exists=False):
+def test(param_true=[0.15, 29000], noise=1, cores=-1, z_sample=np.arange(10, 300, 2), stop_plot=5, repeat=20, plot=True, average_dir=".", delete_if_exists=False):
     """
     functions:
     1. test the fit_param();
@@ -145,20 +146,19 @@ def test(param_true=[0.15, 29000], noise=0.0001, cores=-1, z_sample=np.arange(10
     # fitting
     # param_fit, success, status = fit_param(z_sample, dTb_sample, cores=cores)
     start_time = time.time()
-    fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir, delete_if_exists=delete_if_exists,
-              save_name="m_chi{:.2f}_V_rms{:.0f}.npy".format(param_true[0], param_true[1]))
+    # fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir, delete_if_exists=delete_if_exists, save_name="m_chi{:.2f}_V_rms{:.0f}.npy".format(param_true[0], param_true[1]))
+    fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir, delete_if_exists=delete_if_exists, save_name="m_chi{}-V_rms{}.npy".format(param_true[0], param_true[1]))
     end_time = time.time()
 
     # np.savetxt("m_chi{:.2f}_V_rms{:.0f}.txt".format(param_true[0], param_true[1]), param_fits)
 
     # take the average
-#     if param_fits.ndim <= 1:
-#         param_fit = np.array([np.average(param_fits, axis=0)])
-#     else:
-#         param_fit = np.average(param_fits, axis=0)
+    # if param_fits.ndim <= 1:
+    #     param_fit = np.array([np.average(param_fits, axis=0)])
+    # else:
+    #     param_fit = np.average(param_fits, axis=0)
 
-    print(
-        f"It costs {(end_time-start_time)/3600:.3f} hours to complete the calculation.")
+    print(f"It costs {(end_time-start_time)/3600:.3f} hours to complete the calculation.")
     # print('success =', success)
     # print('status =', status)
 
@@ -291,14 +291,19 @@ if __name__ == '__main__':
     #    for V_rms in np.linspace(29000-10000, 29000+10000, 3):
     #        param_fits = test([m_chi, V_rms], cores=-1, repeat=30, plot=False, average_dir = '.', delete_if_exists=False)
 
-    idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
-    print("SLURM_ARRAY_TASK_ID", os.environ["SLURM_ARRAY_TASK_ID"])
+    for m_chi in np.logspace(-2, 0, 3):
+        for V_rms in np.linspace(19000, 39000, 3):
+            param_fits = test([m_chi, V_rms], cores=1, repeat=5, plot=False, average_dir = '.', delete_if_exists=False)
 
-    m_chi_array = np.logspace(-2, 0, 3)
-    V_rms_array = np.linspace(29000-10000, 29000+10000, 3)
-    parameters = list(product(m_chi_array, V_rms_array))
+    ######################################################################
+    # idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
+    # print("SLURM_ARRAY_TASK_ID", os.environ["SLURM_ARRAY_TASK_ID"])
 
-    myparam = parameters[idx]
-    print("myparam =", myparam)
-    param_fits = test(myparam, cores=-1, repeat=30, plot=False,
-                      average_dir='.', delete_if_exists=False)
+    # m_chi_array = np.logspace(-2, 0, 3)
+    # V_rms_array = np.linspace(29000-10000, 29000+10000, 3)
+    # parameters = list(product(m_chi_array, V_rms_array))
+
+    # myparam = parameters[idx]
+    # print("myparam =", myparam)
+    # param_fits = test(myparam, cores=-1, repeat=30, plot=False,
+    #                   average_dir='.', delete_if_exists=False)
