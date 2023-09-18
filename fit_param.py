@@ -21,7 +21,7 @@ from itertools import product
 average_path = '.'
 
 
-def interp_dTb(param, z, cores=True, adequate_random_v_streams=200):  # 200 by default
+def interp_dTb(param, z, cores=True, adequate_random_v_streams=2):  # 200 by default
     """
     functions:
     1. generate adequate random stream velocities subject to 3D Gaussian distribution;
@@ -100,9 +100,9 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 29000*
 
         start_time = time.time()
         # res = least_squares(residual, param_guess, diff_step=0.1, bounds=bounds, xtol=1e-3, args=(args_z, args_dTb, cores))
-        res = least_squares(residual, param_guess, diff_step=0.1,
+        # res = least_squares(residual, param_guess, diff_step=0.1, bounds=bounds, args=(args_z, args_dTb, cores))
+        res = least_squares(residual, param_guess,
                             bounds=bounds, args=(args_z, args_dTb, cores))
-        # res = least_squares(residual, param_guess, bounds=bounds, args=(args_z, args_dTb, cores))
 
         end_time = time.time()
 
@@ -129,7 +129,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 29000*
 # In[3]:
 
 
-def test(param_true=[0.15, 29000], noise=5, cores=-1, z_sample=np.arange(10, 300, 2), stop_plot=5, repeat=20, plot=True, average_dir=".", delete_if_exists=False):
+def test(param_true=[0.15, 29000], noise=0.0001, cores=-1, z_sample=np.arange(10, 300, 2), stop_plot=5, repeat=20, plot=True, average_dir=".", delete_if_exists=False):
     """
     functions:
     1. test the fit_param();
