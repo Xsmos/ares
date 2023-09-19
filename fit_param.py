@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import ares
 from average_dTb import average_dTb
 import os
-import random
+# import random
 import warnings
 import time
 from npy_append_array import NpyAppendArray
@@ -21,7 +21,7 @@ from itertools import product
 average_path = '.'
 
 
-def interp_dTb(param, z, cores=True, adequate_random_v_streams=2):  # 200 by default
+def interp_dTb(param, z, cores=True, adequate_random_v_streams=800):  # 200 by default
     """
     functions:
     1. generate adequate random stream velocities subject to 3D Gaussian distribution;
@@ -103,7 +103,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [1
         # res = least_squares(residual, param_guess, diff_step=0.1, bounds=bounds, xtol=1e-3, args=(args_z, args_dTb, cores))
         # res = least_squares(residual, param_guess, diff_step=1, bounds=bounds, args=(args_z, args_dTb, cores))
         # res = least_squares(residual, param_guess, bounds=bounds, args=(args_z, args_dTb, cores))
-        res = least_squares(residual, param_guess, bounds=bounds, args=(args_z, args_dTb, cores))
+        res = least_squares(residual, param_guess, diff_step=0.1, bounds=bounds, args=(args_z, args_dTb, cores))
 
         end_time = time.time()
 
@@ -130,7 +130,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [1
 # In[3]:
 
 
-def test(param_true=[0.15, 29000], noise=1, cores=-1, z_sample=np.arange(10, 300, 2), stop_plot=5, repeat=20, plot=True, average_dir=".", delete_if_exists=False):
+def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 800, 10), stop_plot=5, repeat=20, plot=True, average_dir=".", delete_if_exists=False):
     """
     functions:
     1. test the fit_param();
@@ -212,8 +212,42 @@ def test(param_true=[0.15, 29000], noise=1, cores=-1, z_sample=np.arange(10, 300
 
 # In[4]:
 
+def estimate_N_random_v_stream(N = [10,500,1000,2000,3000,4000,5000]):
+    data = np.load("average_dTb/V_rms19000.0/m_chi0.01.npy")
+    # data = np.load("average_dTb/V_rms19000.0/m_chi0.1.npy")
+    z_array = data[0]
+    all_dTb_interp = data[1:]
+    plt.subplot(121)
+    dTb_averaged = [np.average(all_dTb_interp[:N[i]], axis=0)
+                    for i in range(len(N))]
+    # print(np.size(dTb_averaged))
+    plt.title("z vs. dTb_averaged")
+    for i in range(len(N)):
+        plt.plot(z_array, dTb_averaged[i], label="N = {}".format(N[i]))
+    plt.xlabel("z")
+    plt.ylabel(r'$\overline{dTb}$ [mK]')
+    plt.legend()
+    # plt.xlim(0, 300)
 
-def demonstrate(file_dir="average_dTb/V_rms29000/m_chi0.10", N=[100, 200, 300, 400, 500, 600, 700]):
+    plt.subplot(122)
+    N = np.arange(10, 5000, 100)
+    dTb_averaged = [np.average(all_dTb_interp[:N[i]], axis=0)
+                    for i in range(len(N))]
+    # print(np.shape(dTb_averaged))
+    dTb_averaged_diff = np.array(
+        [dTb_averaged[i] - dTb_averaged[-1] for i in range(len(N)-1)])
+    # dTb_averaged_diff = dTb_averaged_diff[]
+    # print(np.shape(dTb_averaged_diff))
+    # plt.figure(dpi=120)
+    plt.plot(N[:-1], np.max(abs(dTb_averaged_diff), axis=1))
+    plt.hlines(0, xmin=0, xmax=N[-1], linestyles=':')
+    plt.xlabel("N")
+    plt.ylabel("maximum difference [mK]")
+    plt.title(r"N vs. max($\Delta$T)")
+    plt.show()
+
+
+def demonstrate_depreciate(file_dir="average_dTb/V_rms29000.0/m_chi0.10", N=[100, 200, 300, 400, 500, 600, 700, 800,900,999]):
     """
     functions:
     1. show how many random velocities are required to achieve stable and accurate dTb_averaged;
@@ -231,7 +265,7 @@ def demonstrate(file_dir="average_dTb/V_rms29000/m_chi0.10", N=[100, 200, 300, 4
         file_names = os.listdir(file_dir)
 
     print("file_names[:5] =", file_names[:5])
-    random.shuffle(file_names)
+    np.random.shuffle(file_names)
     print("After shuffling, file_names[:5] =", file_names[:5])
     for file_name in file_names:
         data = np.load(file_dir+"/{}".format(file_name))
