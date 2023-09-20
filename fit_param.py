@@ -21,7 +21,7 @@ from itertools import product
 average_path = '.'
 
 
-def interp_dTb(param, z, cores=True, adequate_random_v_streams=800):  # 200 by default
+def interp_dTb(param, z, cores=True, adequate_random_v_streams=400):  # 200 by default
     """
     functions:
     1. generate adequate random stream velocities subject to 3D Gaussian distribution;
@@ -103,7 +103,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [1
         # res = least_squares(residual, param_guess, diff_step=0.1, bounds=bounds, xtol=1e-3, args=(args_z, args_dTb, cores))
         # res = least_squares(residual, param_guess, diff_step=1, bounds=bounds, args=(args_z, args_dTb, cores))
         # res = least_squares(residual, param_guess, bounds=bounds, args=(args_z, args_dTb, cores))
-        res = least_squares(residual, param_guess, diff_step=0.1, bounds=bounds, args=(args_z, args_dTb, cores))
+        res = least_squares(residual, param_guess, diff_step=0.2, bounds=bounds, args=(args_z, args_dTb, cores))
 
         end_time = time.time()
 
@@ -325,19 +325,18 @@ if __name__ == '__main__':
     #    for V_rms in np.linspace(29000-10000, 29000+10000, 3):
     #        param_fits = test([m_chi, V_rms], cores=-1, repeat=30, plot=False, average_dir = '.', delete_if_exists=False)
 
-    for m_chi in np.logspace(-2, 0, 3):
-        for V_rms in np.linspace(19000, 39000, 3):
-            param_fits = test([m_chi, V_rms], cores=1, repeat=5, plot=False, average_dir = '.', delete_if_exists=False)
+    # for m_chi in np.logspace(-2, 0, 3):
+    #     for V_rms in np.linspace(19000, 39000, 3):
+    #         param_fits = test([m_chi, V_rms], cores=1, repeat=5, plot=False, average_dir = '.', delete_if_exists=False)
 
     ######################################################################
-    # idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
-    # print("SLURM_ARRAY_TASK_ID", os.environ["SLURM_ARRAY_TASK_ID"])
+    idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
+    print("SLURM_ARRAY_TASK_ID", os.environ["SLURM_ARRAY_TASK_ID"])
 
-    # m_chi_array = np.logspace(-2, 0, 3)
-    # V_rms_array = np.linspace(29000-10000, 29000+10000, 3)
-    # parameters = list(product(m_chi_array, V_rms_array))
+    m_chi_array = np.logspace(-3, 1, 5)
+    V_rms_array = np.linspace(10000, 50000, 5)
+    parameters = list(product(m_chi_array, V_rms_array))
 
-    # myparam = parameters[idx]
-    # print("myparam =", myparam)
-    # param_fits = test(myparam, cores=-1, repeat=30, plot=False,
-    #                   average_dir='.', delete_if_exists=False)
+    myparam = parameters[idx]
+    print("myparam =", myparam)
+    param_fits = test(myparam, cores=-1, repeat=30, plot=False, average_dir='.', delete_if_exists=False)
