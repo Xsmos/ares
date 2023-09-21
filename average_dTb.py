@@ -14,7 +14,7 @@ from test_ares import test_ares
 # N = 5  # number of initial_v_stream
 
 
-def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, average_dir='.'):
+def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, average_dir='average_dTb'):
     """
     randomly generate N initial_v_streams and calculate their 21cm temperatures with dark_matter_heating.
     """
@@ -40,7 +40,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
     # print("dark_matter_mass = {} GeV".format(m_chi), end='')
 
     # path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, round(V_rms, -1), m_chi)
-    path = "{}/average_dTb/V_rms{}/m_chi{}".format(average_dir, V_rms, m_chi)
+    path = "{}/V_rms{}/m_chi{}".format(average_dir, V_rms, m_chi)
     # print(__name__, ': average_path =', path)
     if not os.path.exists(path):
         os.makedirs(path)
@@ -50,11 +50,11 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
         print("1 CPU working...", end='')
         for i, initial_v_stream in enumerate(initial_v_stream_list):
             if verbose:
-                print("\ninitial_v_stream =", initial_v_stream, 'm/s', end='')
+                print("\ninitial_v_stream =", V_rms, 'm/s', end='')
 
             # sim = ares.simulations.Global21cm(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
             # sim = ares.simulations.Global21cm(initial_v_stream=V_rms, dark_matter_mass=m_chi, **pf)
-            sim = test_ares(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi)
+            sim = test_ares(initial_v_stream=V_rms, dark_matter_mass=m_chi)
             # sim = test_ares(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi)
             # sim = sim_dict[initial_v_stream]
             sim.run()
@@ -84,9 +84,9 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
             if verbose:
                 print("\npid = {}, initial_v_stream = {} m/s".format(os.getpid(),
                       initial_v_stream), end='')
-
-            sim = ares.simulations.Global21cm(
-                initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
+            
+            sim = test_ares(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi)
+            # sim = ares.simulations.Global21cm(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
             # sim = sim_dict[initial_v_stream]
             sim.run()
 
@@ -110,10 +110,10 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
         time_elapse, N, number_of_CPUs))
 
 
-def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores=1, verbose=True, V_rms=29000, average_dir="."):
+def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores=1, verbose=True, V_rms=29000, average_dir="average_dTb"):
     warnings.simplefilter("ignore", UserWarning)
     # path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, round(V_rms, -1), m_chi)
-    path = "{}/average_dTb/V_rms{}/m_chi{}".format(average_dir, V_rms, m_chi)
+    path = "{}/V_rms{}/m_chi{}".format(average_dir, V_rms, m_chi)
     if not os.path.exists(path+'.npy') or more_random_v_streams:
         dTb_random_v_stream(m_chi, N=more_random_v_streams,
                             cores=cores, verbose=verbose, V_rms=V_rms, average_dir=average_dir)
@@ -148,8 +148,7 @@ def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores
     data = np.load(path+'.npy')
     dTb_averaged = np.average(data[1:,:], axis=0)
     # print(__name__, 'dTb_averaged =', dTb_averaged)
-    np.save(path+"_averaged".format(m_chi),
-            np.vstack((z_array, dTb_averaged)))
+    np.save(path+"_averaged".format(m_chi), np.vstack((z_array, dTb_averaged)))
     shutil.rmtree(path, ignore_errors=True)
     # print(__name__ + ": Files in " + path + " have been removed.")
 

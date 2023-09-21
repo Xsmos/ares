@@ -18,10 +18,10 @@ from itertools import product
 
 # In[2]:
 
-average_path = '.'
+# average_path = 'average_dTb_'
 
 
-def interp_dTb(param, z, cores=True, adequate_random_v_streams=400):  # 200 by default
+def interp_dTb(param, z, cores=True, adequate_random_v_streams=2, average_dir="average_dTb"):  # 200 by default
     """
     functions:
     1. generate adequate random stream velocities subject to 3D Gaussian distribution;
@@ -31,14 +31,13 @@ def interp_dTb(param, z, cores=True, adequate_random_v_streams=400):  # 200 by d
     m_chi, V_rms = param
     # V_rms = int(round(V_rms,-1)) # accuracy: 10 m/s
 
-    directory = "{}/average_dTb/V_rms{}/m_chi{}".format(average_path, V_rms, m_chi)
+    directory = "{}/V_rms{}/m_chi{}".format(average_dir, V_rms, m_chi)
     # print("__name__: directory =", directory)
     # directory = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_path, round(V_rms, -1), m_chi)
     if os.path.exists(directory+'.npy'):
         data = np.load(directory+'.npy')
         if data.shape[0]-1 < adequate_random_v_streams:
-            more_random_v_streams = adequate_random_v_streams - \
-                (data.shape[0]-1)
+            more_random_v_streams = adequate_random_v_streams - (data.shape[0]-1)
             print("{} more random v_streams will be generated for m_chi = {} GeV and V_rms = {} m/s...".format(
                 more_random_v_streams, m_chi, V_rms))
         else:
@@ -59,24 +58,24 @@ def interp_dTb(param, z, cores=True, adequate_random_v_streams=400):  # 200 by d
 
     if more_random_v_streams:
         z_array, dTb_averaged, m_chi, V_rms = average_dTb(
-            m_chi=m_chi, more_random_v_streams=more_random_v_streams, cores=cores, verbose=False, V_rms=V_rms, average_dir=average_path)
+            m_chi=m_chi, more_random_v_streams=more_random_v_streams, cores=cores, verbose=False, V_rms=V_rms, average_dir=average_dir)
 
     dTb = np.interp(z, z_array, dTb_averaged)
     return dTb
 
 
-def residual(param, z_sample, dTb_sample, cores=True):
-    residual = interp_dTb(param, z_sample, cores) - dTb_sample
+def residual(param, z_sample, dTb_sample, cores=1, average_dir="average_dTb"):
+    residual = interp_dTb(param, z_sample, cores, average_dir=average_dir) - dTb_sample
     return residual
 
 
-def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [10, np.infty]), cores=1, average_dir='.', delete_if_exists=False, save_name="fitted_m_chi_V_rms.npy"):
+def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [10, np.infty]), cores=1, average_dir='average_dTb', delete_if_exists=False, save_name="fitted_m_chi_V_rms.npy"):
     '''
     fit the parameter(s) by z_sample and dTb_sample via scipy.optimize.least_squares.
     '''
     warnings.simplefilter("ignore", UserWarning)
-    global average_path
-    average_path = average_dir
+#     global average_path
+#     average_path = average_dir
 
     if z_sample.ndim == 1 and dTb_sample.ndim != 1:
         z_sample = np.tile(z_sample, (dTb_sample.shape[0], 1))
@@ -100,10 +99,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [1
             args_dTb = dTb_sample[i]
 
         start_time = time.time()
-        # res = least_squares(residual, param_guess, diff_step=0.1, bounds=bounds, xtol=1e-3, args=(args_z, args_dTb, cores))
-        # res = least_squares(residual, param_guess, diff_step=1, bounds=bounds, args=(args_z, args_dTb, cores))
-        # res = least_squares(residual, param_guess, bounds=bounds, args=(args_z, args_dTb, cores))
-        res = least_squares(residual, param_guess, diff_step=0.2, bounds=bounds, args=(args_z, args_dTb, cores))
+        res = least_squares(residual, param_guess, diff_step=1, bounds=bounds, args=(args_z, args_dTb, cores, average_dir))
 
         end_time = time.time()
 
@@ -130,7 +126,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [1
 # In[3]:
 
 
-def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 800, 10), stop_plot=5, repeat=20, plot=True, average_dir=".", delete_if_exists=False):
+def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 800, 10), stop_plot=5, repeat=20, plot=True, average_dir="average_dTb", delete_if_exists=False):
     """
     functions:
     1. test the fit_param();
@@ -139,9 +135,8 @@ def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 
     print("param_true =", param_true)
 
     # sampling
-    dTb_accurate = interp_dTb(param_true, z_sample, cores)
-    dTb_sample = dTb_accurate + noise * \
-        np.random.normal(size=(repeat, z_sample.shape[0]))
+    dTb_accurate = interp_dTb(param_true, z_sample, cores, average_dir=average_dir)
+    dTb_sample = dTb_accurate + noise * np.random.normal(size=(repeat, z_sample.shape[0]))
 
     # fitting
     # param_fit, success, status = fit_param(z_sample, dTb_sample, cores=cores)
@@ -177,8 +172,7 @@ def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 
                 i, param_fits[i][0]), s=2)
             if i >= stop_plot:
                 break
-        plt.plot(z_sample, interp_dTb(param_fit, z_sample),
-                 label=r'$m_{\chi, \rm fit}$'+' = {:.3f} GeV'.format(param_fit[0]), linestyle=':', c='r')
+        plt.plot(z_sample, interp_dTb(param_fit, z_sample), label=r'$m_{\chi, \rm fit}$'+' = {:.3f} GeV'.format(param_fit[0]), linestyle=':', c='r')
         plt.xlim(0, 300)
         # plt.ylim(-60,0)
         plt.xlabel(r"$z$")
@@ -333,10 +327,10 @@ if __name__ == '__main__':
     idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
     print("SLURM_ARRAY_TASK_ID", os.environ["SLURM_ARRAY_TASK_ID"])
 
-    m_chi_array = np.logspace(-3, 1, 5)
-    V_rms_array = np.linspace(10000, 50000, 5)
+    m_chi_array = np.logspace(-2, 0, 3)
+    V_rms_array = np.linspace(20000, 40000, 3)
     parameters = list(product(m_chi_array, V_rms_array))
 
     myparam = parameters[idx]
     print("myparam =", myparam)
-    param_fits = test(myparam, cores=-1, repeat=30, plot=False, average_dir='.', delete_if_exists=False)
+    param_fits = test(myparam, cores=-1, repeat=30, plot=False, average_dir=f'average_dTb-{idx}-{myparam}', delete_if_exists=False)
