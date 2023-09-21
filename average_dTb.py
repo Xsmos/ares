@@ -54,8 +54,8 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
 
             # sim = ares.simulations.Global21cm(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
             # sim = ares.simulations.Global21cm(initial_v_stream=V_rms, dark_matter_mass=m_chi, **pf)
-            sim = test_ares(initial_v_stream=V_rms, dark_matter_mass=m_chi)
-            # sim = test_ares(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi)
+            # sim = test_ares(initial_v_stream=V_rms, dark_matter_mass=m_chi)
+            sim = test_ares(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi)
             # sim = sim_dict[initial_v_stream]
             sim.run()
 

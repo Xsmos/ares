@@ -4,7 +4,7 @@
 # In[1]:
 
 
-from scipy.optimize import least_squares
+from scipy.optimize import least_squares, curve_fit
 import numpy as np
 import matplotlib.pyplot as plt
 import ares
@@ -21,7 +21,7 @@ from itertools import product
 # average_path = 'average_dTb_'
 
 
-def interp_dTb(param, z, cores=True, adequate_random_v_streams=2, average_dir="average_dTb"):  # 200 by default
+def interp_dTb(param, z, cores=1, adequate_random_v_streams=200, average_dir="average_dTb"):  # 200 by default
     """
     functions:
     1. generate adequate random stream velocities subject to 3D Gaussian distribution;
@@ -63,13 +63,18 @@ def interp_dTb(param, z, cores=True, adequate_random_v_streams=2, average_dir="a
     dTb = np.interp(z, z_array, dTb_averaged)
     return dTb
 
+def interp_dTb_for_curve_fit(z, m_chi, V_rms):
+    param = [m_chi, V_rms]
+    dTb_interp = interp_dTb(param, z)
+    return dTb_interp
+    
 
 def residual(param, z_sample, dTb_sample, cores=1, average_dir="average_dTb"):
     residual = interp_dTb(param, z_sample, cores, average_dir=average_dir) - dTb_sample
     return residual
 
 
-def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [10, np.infty]), cores=1, average_dir='average_dTb', delete_if_exists=False, save_name="fitted_m_chi_V_rms.npy"):
+def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [10, np.infty]), cores=1, average_dir='average_dTb', delete_if_exists=False, save_name="fitted_m_chi_V_rms.npy", method="least_squares"):
     '''
     fit the parameter(s) by z_sample and dTb_sample via scipy.optimize.least_squares.
     '''
@@ -99,34 +104,33 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [1
             args_dTb = dTb_sample[i]
 
         start_time = time.time()
-        res = least_squares(residual, param_guess, diff_step=1, bounds=bounds, args=(args_z, args_dTb, cores, average_dir))
+        # print(__name__, "method =", method)
+        if method == "least_squares":
+            res = least_squares(residual, param_guess, diff_step=0.1, bounds=bounds, args=(args_z,args_dTb,cores,average_dir))
+            theta_fit = res.x
+            if res.success == False:
+                continue
+        elif method == "curve_fit":
+            theta_fit, err_fit = curve_fit(interp_dTb_for_curve_fit, args_z, args_dTb, p0=param_guess, bounds=bounds)
 
         end_time = time.time()
-
-        print('#{}'.format(i+1), ', fit:', res.x, ', success:', res.success,
-              ', status:', res.status, f', cost {(end_time-start_time)/60:.2f} min')
+        
+        if method == "least_squares":
+            print('#{}'.format(i+1), ', fit:', theta_fit, ', success:', res.success, ', status:', res.status, f', cost {(end_time-start_time)/60:.2f} min')
+        elif method == "curve_fit":
+            print('#{}'.format(i+1), ', fit:', theta_fit, f', cost {(end_time-start_time)/60:.2f} min')
+            
         print('---'*30)
 
-        if res.success:
-            with NpyAppendArray(save_name, delete_if_exists=delete_if_exists) as npaa:
-                npaa.append(np.array([res.x]))
-                # data = np.load(filename, mmap_mode="r")
-            # fitting_results_txt.write("{} ".format(res.x[0]))
-#             if "fitting_results" not in vars():
-#                 fitting_results = res.x
-#             else:
-#                 fitting_results = np.vstack((fitting_results, res.x))
-    # fitting_results_txt.close()
-    # fitting_results = np.loadtxt("fitting_results.txt")
-    # fitting_result = np.average(fitting_results)
-    # print('return:', fitting_results)
+        with NpyAppendArray(save_name, delete_if_exists=delete_if_exists) as npaa:
+                npaa.append(np.array([theta_fit]))
     return
 
 
 # In[3]:
 
 
-def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 800, 10), stop_plot=5, repeat=20, plot=True, average_dir="average_dTb", delete_if_exists=False):
+def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 800, 1), stop_plot=5, repeat=20, plot=True, average_dir="average_dTb", delete_if_exists=False, method="least_squares"):
     """
     functions:
     1. test the fit_param();
@@ -142,7 +146,7 @@ def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 
     # param_fit, success, status = fit_param(z_sample, dTb_sample, cores=cores)
     start_time = time.time()
     # fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir, delete_if_exists=delete_if_exists, save_name="m_chi{:.2f}_V_rms{:.0f}.npy".format(param_true[0], param_true[1]))
-    fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir, delete_if_exists=delete_if_exists, save_name="m_chi{}-V_rms{}.npy".format(param_true[0], param_true[1]))
+    fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir, delete_if_exists=delete_if_exists, save_name="m_chi{}-V_rms{}.npy".format(param_true[0], param_true[1]), method=method)
     end_time = time.time()
 
     # np.savetxt("m_chi{:.2f}_V_rms{:.0f}.txt".format(param_true[0], param_true[1]), param_fits)
