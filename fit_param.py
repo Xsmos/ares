@@ -73,6 +73,46 @@ def residual(param, z_sample, dTb_sample, cores=1, average_dir="average_dTb"):
     residual = interp_dTb(param, z_sample, cores, average_dir=average_dir) - dTb_sample
     return residual
 
+class initial_guess():
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+        print(__name__, f"Initiated grid {self.grid}")
+
+    @property
+    def bounds(self):
+        if not hasattr(self, '_bounds'):
+            self._bounds = [[0.01,20000],[1,40000]]
+        return self._bounds
+    
+    @bounds.setter
+    def bounds(self, value):
+        if np.shape(value) != (2,2):
+            raise TypeError("Shape of bounds must be (2,2).")
+        self._bounds = value
+
+    @property
+    def steps(self):
+        if not hasattr(self, '_steps'):
+            self._steps = [4,4]
+        return self._steps
+    
+    @steps.setter
+    def steps(self, value):
+        if np.shape(value) != (2,):
+            raise TypeError("Shape of steps must be (2,).")
+        self._steps = value
+
+    @property
+    def grid(self):
+        if not hasattr(self, '_grid'):
+            grid_x = np.logspace(np.log10(self.bounds[0,0]), np.log10(self.bound[1,0]), np.steps[0])
+            grid_y = np.linspace(self.bounds[0,1], self.bound[1,1], np.steps[1])
+            self.grid = list(product(grid_x, grid_y))
+        return self.grid
+
+    @grid.setter
+    def grid(self, value):
+        self.grid = value
 
 def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [10, np.infty]), cores=1, average_dir='average_dTb', delete_if_exists=False, save_name="fitted_m_chi_V_rms.npy", method="least_squares"):
     '''
@@ -125,7 +165,6 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [1
         with NpyAppendArray(save_name, delete_if_exists=delete_if_exists) as npaa:
                 npaa.append(np.array([theta_fit]))
     return
-
 
 # In[3]:
 
