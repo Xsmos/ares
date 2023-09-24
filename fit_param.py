@@ -21,7 +21,7 @@ from itertools import product
 # average_path = 'average_dTb_'
 
 
-def interp_dTb(param, z, cores=1, adequate_random_v_streams=200, average_dir="average_dTb"):  # 200 by default
+def interp_dTb(param, z, cores=1, average_dir="average_dTb", **kwargs):  # 200 by default
     """
     functions:
     1. generate adequate random stream velocities subject to 3D Gaussian distribution;
@@ -30,6 +30,11 @@ def interp_dTb(param, z, cores=1, adequate_random_v_streams=200, average_dir="av
     """
     m_chi, V_rms = param
     # V_rms = int(round(V_rms,-1)) # accuracy: 10 m/s
+
+    if "adequate_random_v_streams" not in kwargs:
+        adequate_random_v_streams = 200
+    else:
+        adequate_random_v_streams = kwargs['adequate_random_v_streams']
 
     directory = "{}/V_rms{}/m_chi{}".format(average_dir, V_rms, m_chi)
     # print("__name__: directory =", directory)
@@ -58,7 +63,7 @@ def interp_dTb(param, z, cores=1, adequate_random_v_streams=200, average_dir="av
 
     if more_random_v_streams:
         z_array, dTb_averaged, m_chi, V_rms = average_dTb(
-            m_chi=m_chi, more_random_v_streams=more_random_v_streams, cores=cores, verbose=False, V_rms=V_rms, average_dir=average_dir)
+            m_chi=m_chi, more_random_v_streams=more_random_v_streams, cores=cores, verbose=False, V_rms=V_rms, average_dir=average_dir, **kwargs)
 
     dTb = np.interp(z, z_array, dTb_averaged)
     return dTb
@@ -69,58 +74,80 @@ def interp_dTb_for_curve_fit(z, m_chi, V_rms):
     return dTb_interp
     
 
-def residual(param, z_sample, dTb_sample, cores=1, average_dir="average_dTb"):
-    residual = interp_dTb(param, z_sample, cores, average_dir=average_dir) - dTb_sample
+def residual(param, z_sample, dTb_sample, cores=1, average_dir="average_dTb", **kwargs):
+    residual = interp_dTb(param, z_sample, cores, average_dir=average_dir, **kwargs) - dTb_sample
     return residual
 
-class initial_guess():
+class Grid():
     def __init__(self, **kwargs):
         self.kwargs = kwargs
-        print(__name__, f"Initiated grid {self.grid}")
+        print("Grid's parameters:", self.kwargs)
+        # print(__name__, f"Initiated grid {self.grid}")
 
     @property
     def bounds(self):
         if not hasattr(self, '_bounds'):
-            self._bounds = [[0.01,20000],[1,40000]]
+            self._bounds = np.array([[0.01,20000],[1,40000]])
         return self._bounds
     
     @bounds.setter
     def bounds(self, value):
         if np.shape(value) != (2,2):
             raise TypeError("Shape of bounds must be (2,2).")
-        self._bounds = value
+        self._bounds = np.array(value)
 
     @property
     def steps(self):
         if not hasattr(self, '_steps'):
-            self._steps = [4,4]
+            self._steps = np.array([3,3])
         return self._steps
     
     @steps.setter
     def steps(self, value):
         if np.shape(value) != (2,):
             raise TypeError("Shape of steps must be (2,).")
-        self._steps = value
+        self._steps = np.array(value)
 
     @property
     def grid(self):
         if not hasattr(self, '_grid'):
-            grid_x = np.logspace(np.log10(self.bounds[0,0]), np.log10(self.bound[1,0]), np.steps[0])
-            grid_y = np.linspace(self.bounds[0,1], self.bound[1,1], np.steps[1])
-            self.grid = list(product(grid_x, grid_y))
-        return self.grid
+            grid_x = np.logspace(np.log10(self.bounds[0,0]), np.log10(self.bounds[1,0]), self.steps[0])
+            grid_y = np.linspace(self.bounds[0,1], self.bounds[1,1], self.steps[1])
+            # print(grid_x)
+            self._grid = list(product(grid_x, grid_y))
+        return self._grid
 
     @grid.setter
     def grid(self, value):
-        self.grid = value
+        self._grid = value
 
-def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [10, np.infty]), cores=1, average_dir='average_dTb', delete_if_exists=False, save_name="fitted_m_chi_V_rms.npy", method="least_squares"):
+    def generate_dTb_map(self):
+        self.dTb = {}
+        for grid in self.grid:
+            self.dTb[grid] = interp_dTb(grid, self.kwargs['z_sample'], **self.kwargs)
+
+    def calculate_difference(self):
+        self.diff = {}
+        for grid in self.grid:
+            self.diff[grid] = np.average((self.dTb[grid]-self.kwargs['dTb_sample'])**2)
+            print("dTb", self.dTb[grid])
+            print("dTb_sample", self.kwargs['dTb_sample'])
+            print(f"difference for {grid} is {self.diff[grid]}")
+
+    def find_least_squares(self):
+        idx = np.argmin(list(self.diff.values()))
+        grid = list(self.diff.keys())[idx]
+        print("closest fit is:", grid)
+        return grid
+
+
+def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [10, np.infty]), cores=1, average_dir='average_dTb', delete_if_exists=False, save_name="fitted_m_chi_V_rms.npy", method="enumerate", **kwargs):
     '''
     fit the parameter(s) by z_sample and dTb_sample via scipy.optimize.least_squares.
     '''
     warnings.simplefilter("ignore", UserWarning)
-#     global average_path
-#     average_path = average_dir
+    # global average_path
+    # average_path = average_dir
 
     if z_sample.ndim == 1 and dTb_sample.ndim != 1:
         z_sample = np.tile(z_sample, (dTb_sample.shape[0], 1))
@@ -152,6 +179,13 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [1
                 continue
         elif method == "curve_fit":
             theta_fit, err_fit = curve_fit(interp_dTb_for_curve_fit, args_z, args_dTb, p0=param_guess, bounds=bounds)
+        elif method == 'enumerate':
+            grid = Grid(z_sample=z_sample, dTb_sample=dTb_sample, param_guess=param_guess, bounds=bounds, cores=cores, 
+                        average_dir=average_dir, delete_if_exists=delete_if_exists, save_name=save_name, method=method, **kwargs)
+            grid.generate_dTb_map()
+            grid.calculate_difference()
+            theta_fit = grid.find_least_squares()
+            
 
         end_time = time.time()
         
@@ -169,7 +203,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], bounds=([0, 0], [1
 # In[3]:
 
 
-def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 800, 1), stop_plot=5, repeat=20, plot=True, average_dir="average_dTb", delete_if_exists=False, method="least_squares", param_guess=[0.1, 29000]):
+def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 800, 1), stop_plot=5, repeat=20, plot=True, average_dir="average_dTb", delete_if_exists=False, method="enumerate", param_guess=[0.1, 29000], **kwargs):
     """
     functions:
     1. test the fit_param();
@@ -178,14 +212,14 @@ def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 
     print("param_true =", param_true)
 
     # sampling
-    dTb_accurate = interp_dTb(param_true, z_sample, cores, average_dir=average_dir)
+    dTb_accurate = interp_dTb(param_true, z_sample, cores, average_dir=average_dir, method=method, **kwargs)
     dTb_sample = dTb_accurate + noise * np.random.normal(size=(repeat, z_sample.shape[0]))
 
     # fitting
     # param_fit, success, status = fit_param(z_sample, dTb_sample, cores=cores)
     start_time = time.time()
     # fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir, delete_if_exists=delete_if_exists, save_name="m_chi{:.2f}_V_rms{:.0f}.npy".format(param_true[0], param_true[1]))
-    fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir, delete_if_exists=delete_if_exists, save_name="m_chi{}-V_rms{}.npy".format(param_true[0], param_true[1]), method=method, param_guess=param_guess)
+    fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir, delete_if_exists=delete_if_exists, save_name="m_chi{}-V_rms{}.npy".format(param_true[0], param_true[1]), method=method, param_guess=param_guess, **kwargs)
     end_time = time.time()
 
     # np.savetxt("m_chi{:.2f}_V_rms{:.0f}.txt".format(param_true[0], param_true[1]), param_fits)
@@ -367,13 +401,16 @@ if __name__ == '__main__':
     #         param_fits = test([m_chi, V_rms], cores=1, repeat=5, plot=False, average_dir = '.', delete_if_exists=False)
 
     ######################################################################
-    idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
-    print("SLURM_ARRAY_TASK_ID", os.environ["SLURM_ARRAY_TASK_ID"])
+    # idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
+    # print("SLURM_ARRAY_TASK_ID", os.environ["SLURM_ARRAY_TASK_ID"])
 
-    m_chi_array = np.logspace(-2, 0, 3)
-    V_rms_array = np.linspace(20000, 40000, 3)
-    parameters = list(product(m_chi_array, V_rms_array))
+    # m_chi_array = np.logspace(-2, 0, 3)
+    # V_rms_array = np.linspace(20000, 40000, 3)
+    # parameters = list(product(m_chi_array, V_rms_array))
 
-    myparam = parameters[idx]
-    print("myparam =", myparam)
-    param_fits = test(myparam, cores=-1, repeat=30, plot=False, average_dir=f'average_dTb-{idx}-{myparam}', delete_if_exists=False)
+    # myparam = parameters[idx]
+    # print("myparam =", myparam)
+    # param_fits = test(myparam, cores=-1, repeat=30, plot=False, average_dir=f'average_dTb-{idx}-{myparam}', delete_if_exists=False)
+
+    #######################################################################
+    test([0.1, 29000], cores=1, method="enumerate", repeat=2, average_dir="enumerate_dTb", adequate_random_v_streams=100)

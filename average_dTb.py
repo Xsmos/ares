@@ -14,7 +14,7 @@ from test_ares import test_ares
 # N = 5  # number of initial_v_stream
 
 
-def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, average_dir='average_dTb'):
+def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, average_dir='average_dTb', **kwargs):
     """
     randomly generate N initial_v_streams and calculate their 21cm temperatures with dark_matter_heating.
     """
@@ -34,9 +34,11 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
     # initial_v_stream_list = np.random.normal(0, V_rms, N)
     mean = np.zeros(3)
     cov = np.eye(3, 3) * V_rms**2 / 3
-    initial_v_stream_list = np.random.multivariate_normal(mean, cov, N)
-    initial_v_stream_list = np.sqrt(np.sum(initial_v_stream_list**2, axis=1))
-
+    if not kwargs['method'] == 'enumerate':
+        initial_v_stream_list = np.random.multivariate_normal(mean, cov, N)
+        initial_v_stream_list = np.sqrt(np.sum(initial_v_stream_list**2, axis=1))
+    else:
+        initial_v_stream_list = np.linspace(0, 3*V_rms, kwargs['adequate_random_v_streams'])
     # print("dark_matter_mass = {} GeV".format(m_chi), end='')
 
     # path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, round(V_rms, -1), m_chi)
@@ -65,8 +67,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
             #     os.makedirs(path)
             # print(__name__, "dTb =", sim.history['dTb'])
             # print(__name__, path+"/{}".format(initial_v_stream))
-            np.save(path+"/{}".format(initial_v_stream),
-                    np.vstack((sim.history["z"], sim.history["dTb"])))
+            np.save(path+"/{}".format(initial_v_stream), np.vstack((sim.history["z"], sim.history["dTb"])))
 
             number_of_CPUs = 1
             # dTb_dict[initial_v_stream] = np.interp(z_array, sim.history['z'][::-1], sim.history['dTb'][::-1])
@@ -95,8 +96,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
             # if not os.path.exists(path):
             #     os.makedirs(path, exist_ok=True)
 
-            np.save(path+"/{}".format(initial_v_stream),
-                    np.vstack((sim.history["z"], sim.history["dTb"])))
+            np.save(path+"/{}".format(initial_v_stream), np.vstack((sim.history["z"], sim.history["dTb"])))
 
             return os.getpid()
 
@@ -109,14 +109,25 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
     print("\nIt costs {:.2f} seconds to calculate dTb of {} different initial_v_streams by {} CPU(s).".format(
         time_elapse, N, number_of_CPUs))
 
+def Gaussian_3D(v, V_rms):
+    P = np.exp(-3*v**2/(2*V_rms**2)) / (2*np.pi/3*V_rms**2)**(3/2)
+    return P
 
-def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores=1, verbose=True, V_rms=29000, average_dir="average_dTb"):
+def integrate_dTb_with_Probability(dTbs, file_names):
+    velocities = np.array([float(name[:-4]) for name in file_names])
+    probabilities = Gaussian_3D(dTbs, velocities)
+    dTb_averaged = dTbs.T@probabilities / probabilities.sum()
+    print(__name__, "velocities", velocities)
+    print(__name__, "probabilities", probabilities)
+    print(__name__, "dTb_averaged", dTb_averaged)
+    return dTb_averaged
+
+def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores=1, verbose=True, V_rms=29000, average_dir="average_dTb", **kwargs):
     warnings.simplefilter("ignore", UserWarning)
     # path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, round(V_rms, -1), m_chi)
     path = "{}/V_rms{}/m_chi{}".format(average_dir, V_rms, m_chi)
     if not os.path.exists(path+'.npy') or more_random_v_streams:
-        dTb_random_v_stream(m_chi, N=more_random_v_streams,
-                            cores=cores, verbose=verbose, V_rms=V_rms, average_dir=average_dir)
+        dTb_random_v_stream(m_chi, N=more_random_v_streams, cores=cores, verbose=verbose, V_rms=V_rms, average_dir=average_dir, **kwargs)
 
     file_names = os.listdir(path)
     # print("Preprocessing {} files of dTb for m_chi = {} GeV...".format(len(file_names), m_chi))
@@ -146,7 +157,10 @@ def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores
 
     # calculate the averaged value
     data = np.load(path+'.npy')
-    dTb_averaged = np.average(data[1:,:], axis=0)
+    if "enumerate" not in kwargs:
+        dTb_averaged = np.average(data[1:,:], axis=0)
+    else:
+        dTb_averaged = integrate_dTb_with_Probability(data[1:], file_names)
     # print(__name__, 'dTb_averaged =', dTb_averaged)
     np.save(path+"_averaged".format(m_chi), np.vstack((z_array, dTb_averaged)))
     shutil.rmtree(path, ignore_errors=True)
