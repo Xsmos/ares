@@ -34,7 +34,8 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
     # initial_v_stream_list = np.random.normal(0, V_rms, N)
     mean = np.zeros(3)
     cov = np.eye(3, 3) * V_rms**2 / 3
-    if not kwargs['method'] == 'enumerate':
+    # if not kwargs['method'] == 'enumerate':
+    if False:
         initial_v_stream_list = np.random.multivariate_normal(mean, cov, N)
         initial_v_stream_list = np.sqrt(np.sum(initial_v_stream_list**2, axis=1))
     else:
@@ -56,8 +57,8 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
 
             # sim = ares.simulations.Global21cm(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
             # sim = ares.simulations.Global21cm(initial_v_stream=V_rms, dark_matter_mass=m_chi, **pf)
-            # sim = test_ares(initial_v_stream=V_rms, dark_matter_mass=m_chi)
-            sim = test_ares(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi)
+            sim = test_ares(initial_v_stream=V_rms, dark_matter_mass=m_chi)
+            # sim = test_ares(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi)
             # sim = sim_dict[initial_v_stream]
             sim.run()
 
@@ -86,8 +87,8 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
                 print("\npid = {}, initial_v_stream = {} m/s".format(os.getpid(),
                       initial_v_stream), end='')
             
-            sim = test_ares(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi)
-            # sim = ares.simulations.Global21cm(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
+            # sim = test_ares(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi)
+            sim = ares.simulations.Global21cm(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
             # sim = sim_dict[initial_v_stream]
             sim.run()
 
@@ -111,20 +112,23 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
 
 def Gaussian_3D(v, V_rms):
     P = np.exp(-3*v**2/(2*V_rms**2)) / (2*np.pi/3*V_rms**2)**(3/2)
-    return P
+    P_v_square = v**2 * P
+    return P_v_square
 
-def integrate_dTb_with_Probability(dTbs, file_names):
+def integrate_dTb_with_Probability(dTbs, file_names, V_rms):
     velocities = np.array([float(name[:-4]) for name in file_names])
-    probabilities = Gaussian_3D(dTbs, velocities)
+    probabilities = Gaussian_3D(velocities, V_rms)
     dTb_averaged = dTbs.T@probabilities / probabilities.sum()
-    print(__name__, "velocities", velocities)
-    print(__name__, "probabilities", probabilities)
-    print(__name__, "dTb_averaged", dTb_averaged)
+    # print(__name__, "velocities", velocities)
+    # print(__name__, "probabilities", probabilities)
+    # print(__name__, "dTb_averaged", dTb_averaged)
     return dTb_averaged
 
 def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores=1, verbose=True, V_rms=29000, average_dir="average_dTb", **kwargs):
     warnings.simplefilter("ignore", UserWarning)
     # path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, round(V_rms, -1), m_chi)
+    if 'adequate_random_v_streams' not in kwargs:
+        kwargs['adequate_random_v_streams'] = 200
     path = "{}/V_rms{}/m_chi{}".format(average_dir, V_rms, m_chi)
     if not os.path.exists(path+'.npy') or more_random_v_streams:
         dTb_random_v_stream(m_chi, N=more_random_v_streams, cores=cores, verbose=verbose, V_rms=V_rms, average_dir=average_dir, **kwargs)
@@ -157,10 +161,11 @@ def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores
 
     # calculate the averaged value
     data = np.load(path+'.npy')
-    if "enumerate" not in kwargs:
+    # if kwargs['method'] != 'enumerate':
+    if False: # for test only!
         dTb_averaged = np.average(data[1:,:], axis=0)
     else:
-        dTb_averaged = integrate_dTb_with_Probability(data[1:], file_names)
+        dTb_averaged = integrate_dTb_with_Probability(data[1:], file_names, V_rms)
     # print(__name__, 'dTb_averaged =', dTb_averaged)
     np.save(path+"_averaged".format(m_chi), np.vstack((z_array, dTb_averaged)))
     shutil.rmtree(path, ignore_errors=True)
