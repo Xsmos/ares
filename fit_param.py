@@ -87,7 +87,8 @@ class Grid():
     @property
     def bounds(self):
         if not hasattr(self, '_bounds'):
-            self._bounds = np.array([[0.01,0],[1,60000]])
+            self._bounds = self.kwargs['bounds']
+            # self._bounds = np.array([[0.01,0],[1,60000]])
         return self._bounds
     
     @bounds.setter
@@ -99,7 +100,7 @@ class Grid():
     @property
     def N_grid(self):
         if not hasattr(self, '_N_grid'):
-            self._N_grid = np.array([20,20])
+            self._N_grid = self.kwargs['N_grid']
         return self._N_grid
     
     @N_grid.setter
@@ -153,7 +154,13 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], cores=1, average_d
     if "bounds" in kwargs:
         bounds = kwargs['bounds']
     else:
-        bounds = kwargs['bounds'] = np.array([[0.01,0],[10,100000]])
+        bounds = kwargs['bounds'] = np.array([[0.01,1],[10,100000]])
+
+    if "N_grid" in kwargs:
+        N_grid = kwargs['N_grid']
+    else:
+        N_grid = kwargs['N_grid'] = (5,5)
+
 
     warnings.simplefilter("ignore", UserWarning)
     # global average_path
@@ -412,7 +419,7 @@ if __name__ == '__main__':
 
     for m_chi in np.logspace(-2, 0, 3):
         for V_rms in np.linspace(19000, 39000, 3):
-            param_fits = test([m_chi, V_rms], cores=1, method="enumerate", repeat=10, noise=0.001, average_dir="average_dTb", adequate_random_v_streams=10, N_grid=[100,100])
+            param_fits = test([m_chi, V_rms], cores=1, method="enumerate", repeat=10, noise=0.001, average_dir="average_dTb", adequate_random_v_streams=10, N_grid=[10,10])
 
     ######################################################################
     # idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
