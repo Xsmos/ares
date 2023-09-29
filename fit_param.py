@@ -76,6 +76,7 @@ def interp_dTb_for_curve_fit(z, m_chi, V_rms):
 
 def residual(param, z_sample, dTb_sample, kwargs, cores=1, average_dir="average_dTb"):
     residual = interp_dTb(param, z_sample, cores, average_dir=average_dir, **kwargs) - dTb_sample
+    print(f"residual = {np.average(residual**2)}, shape = {residual.shape}")
     return residual
 
 class Grid():
@@ -154,7 +155,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], cores=1, average_d
     if "bounds" in kwargs:
         bounds = kwargs['bounds']
     else:
-        bounds = kwargs['bounds'] = np.array([[0.01,1],[10,100000]])
+        bounds = kwargs['bounds'] = np.array([[0.001,10000],[100,80000]])
 
     if "N_grid" in kwargs:
         N_grid = kwargs['N_grid']
@@ -190,7 +191,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], cores=1, average_d
         start_time = time.time()
         # print(__name__, "method =", method)
         if method == "least_squares":
-            res = least_squares(residual, param_guess, bounds=bounds, args=(args_z, args_dTb, kwargs, cores, average_dir))
+            res = least_squares(residual, param_guess, bounds=bounds, args=(args_z, args_dTb, kwargs, cores, average_dir), diff_step=0.1)
             theta_fit = res.x
             if res.success == False:
                 continue
@@ -413,25 +414,19 @@ def demonstrate_depreciate(file_dir="average_dTb/V_rms29000.0/m_chi0.10", N=[100
 
 
 if __name__ == '__main__':
-    # for m_chi in np.logspace(-2, 0, 3):
-    #    for V_rms in np.linspace(29000-10000, 29000+10000, 3):
-    #        param_fits = test([m_chi, V_rms], cores=-1, repeat=30, plot=False, average_dir = '.', delete_if_exists=False)
 
-    for m_chi in np.logspace(-2, 0, 3):
-        for V_rms in np.linspace(19000, 39000, 3):
-            param_fits = test([m_chi, V_rms], cores=1, method="enumerate", repeat=10, noise=0.001, average_dir="average_dTb", adequate_random_v_streams=10, N_grid=[10,10])
+    # for m_chi in np.logspace(-2, 0, 3):
+    #     for V_rms in np.linspace(19000, 39000, 3):
+    #         param_fits = test([m_chi, V_rms], cores=1, method="least_squares", repeat=20, noise=1, average_dir="average_dTb", adequate_random_v_streams=10, N_grid=[10,10])
 
     ######################################################################
-    # idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
-    # print("SLURM_ARRAY_TASK_ID", os.environ["SLURM_ARRAY_TASK_ID"])
+    idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
+    print("SLURM_ARRAY_TASK_ID", os.environ["SLURM_ARRAY_TASK_ID"])
 
-    # m_chi_array = np.logspace(-2, 0, 3)
-    # V_rms_array = np.linspace(20000, 40000, 3)
-    # parameters = list(product(m_chi_array, V_rms_array))
+    m_chi_array = np.logspace(-2, 1, 7)
+    V_rms_array = np.linspace(20000, 40000, 5)
+    parameters = list(product(m_chi_array, V_rms_array))
 
-    # myparam = parameters[idx]
-    # print("myparam =", myparam)
-    # param_fits = test(myparam, cores=-1, repeat=20, average_dir=f'average_dTb-{idx}-{myparam}', delete_if_exists=False, method="enumerate",noise=1, adequate_random_v_streams=10, N_grid=[20,20])
-
-    #######################################################################
-    # test([0.1, 29000], cores=1, method="enumerate", repeat=2, average_dir="enumerate_dTb", adequate_random_v_streams=100)
+    myparam = parameters[idx]
+    print("myparam =", myparam)
+    param_fits = test(myparam, cores=-1, repeat=100, average_dir=f'average_dTb-{idx}-{myparam}', method="least_squares", noise=1, adequate_random_v_streams=24, N_grid=[100,100])

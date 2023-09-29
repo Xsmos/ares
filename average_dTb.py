@@ -39,7 +39,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
         initial_v_stream_list = np.random.multivariate_normal(mean, cov, N)
         initial_v_stream_list = np.sqrt(np.sum(initial_v_stream_list**2, axis=1))
     else:
-        initial_v_stream_list = np.linspace(0, 3*V_rms, kwargs['adequate_random_v_streams'])
+        initial_v_stream_list = np.linspace(1, 3*V_rms, kwargs['adequate_random_v_streams'])
     # print("dark_matter_mass = {} GeV".format(m_chi), end='')
 
     # path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, round(V_rms, -1), m_chi)
@@ -53,11 +53,11 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
         print("1 CPU working...", end='')
         for i, initial_v_stream in enumerate(initial_v_stream_list):
             if verbose:
-                print("\ninitial_v_stream =", V_rms, 'm/s', end='')
+                print("\ninitial_v_stream =", initial_v_stream, 'm/s', end='')
 
-            # sim = ares.simulations.Global21cm(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
+            sim = ares.simulations.Global21cm(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
             # sim = ares.simulations.Global21cm(initial_v_stream=V_rms, dark_matter_mass=m_chi, **pf)
-            sim = test_ares(initial_v_stream=V_rms, dark_matter_mass=m_chi)
+            # sim = test_ares(initial_v_stream=V_rms, dark_matter_mass=m_chi)
             # sim = test_ares(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi)
             # sim = sim_dict[initial_v_stream]
             sim.run()
@@ -71,8 +71,6 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
             np.save(path+"/{}".format(initial_v_stream), np.vstack((sim.history["z"], sim.history["dTb"])))
 
             number_of_CPUs = 1
-            # dTb_dict[initial_v_stream] = np.interp(z_array, sim.history['z'][::-1], sim.history['dTb'][::-1])
-            # sim_dict[initial_v_stream].save()
     else:
         if cores == -1:
             cpu_count = multiprocessing.cpu_count()
@@ -89,13 +87,7 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, ave
             
             # sim = test_ares(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi)
             sim = ares.simulations.Global21cm(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
-            # sim = sim_dict[initial_v_stream]
             sim.run()
-
-            # path = "./average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(
-            #     V_rms, sim.pf['dark_matter_mass'])
-            # if not os.path.exists(path):
-            #     os.makedirs(path, exist_ok=True)
 
             np.save(path+"/{}".format(initial_v_stream), np.vstack((sim.history["z"], sim.history["dTb"])))
 
@@ -128,7 +120,7 @@ def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores
     warnings.simplefilter("ignore", UserWarning)
     # path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, round(V_rms, -1), m_chi)
     if 'adequate_random_v_streams' not in kwargs:
-        kwargs['adequate_random_v_streams'] = 200
+        kwargs['adequate_random_v_streams'] = 10
     path = "{}/V_rms{}/m_chi{}".format(average_dir, V_rms, m_chi)
     if not os.path.exists(path+'.npy') or more_random_v_streams:
         dTb_random_v_stream(m_chi, N=more_random_v_streams, cores=cores, verbose=verbose, V_rms=V_rms, average_dir=average_dir, **kwargs)
@@ -186,47 +178,63 @@ def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores
     else:
         return (z_array, dTb_averaged, m_chi, V_rms)
 
+def compare(mylist):
+    plt.figure(dpi=150)
+    for m_chi, V_rms in mylist:
+        print(f"m_chi = {m_chi}, V_rms = {V_rms}")
+        z, dTb, m, V = average_dTb(m_chi=m_chi, V_rms=V_rms, cores=1, method='least_squares', adequate_random_v_streams=24)
+        # print('dTb =', dTb)
+        plt.plot(z, dTb, label=f"{m} GeV, {V} m/s", linestyle=":")
+    plt.xlim(0,100)
+    # plt.ylim()
+    plt.legend()
+    plt.savefig("test_compare.png")
 
-if __name__ == "__main__":
-    # dTb_random_v_stream()
-    # average_dTb(plot=True)
-    m_chi_list = [0.1, 1, 10]
-    color_dict = {0.1: "blue", 0.5: 'green', 1: "purple", 10: "red"}
-    style_dict = {0.1: '--', 0.5: ':', 1: "-.", 10: ":"}
+if __name__ == '__main__':
+    points = np.array([(10.0, 0.27884247752898056), (20000, 79973.86)]).T
+    print(f"points = {points}")
+    compare(points)
 
-    fig, ax = plt.subplots()
-    # fig.figure(dpi = 150)
+# if __name__ == "__main__":
+#     # dTb_random_v_stream()
+#     # average_dTb(plot=True)
+#     m_chi_list = [0.1, 1, 10]
+#     color_dict = {0.1: "blue", 0.5: 'green', 1: "purple", 10: "red"}
+#     style_dict = {0.1: '--', 0.5: ':', 1: "-.", 10: ":"}
 
-    for m_chi in m_chi_list:
-        z, T, m_chi = average_dTb(m_chi, more_random_v_streams=2, cores=4)
-        ax.plot(z, T, label='$m_{\chi}$'+' = {} GeV'.format(m_chi),
-                color=color_dict[m_chi], linewidth=3, linestyle=style_dict[m_chi])
-        print("---"*30)
+#     fig, ax = plt.subplots()
+#     # fig.figure(dpi = 150)
 
-    # sim = ares.simulations.Global21cm(radiative_transfer=False, verbose =False)
-    # sim.run()
-    # plt.plot(sim.history['z'], sim.history['dTb'], label="no DMheat, z_initial = {}".format(sim.pf['initial_redshift']), color='k', linestyle=':', linewidth=0.5)
+#     for m_chi in m_chi_list:
+#         z, T, m_chi = average_dTb(m_chi, more_random_v_streams=2, cores=4)
+#         ax.plot(z, T, label='$m_{\chi}$'+' = {} GeV'.format(m_chi),
+#                 color=color_dict[m_chi], linewidth=3, linestyle=style_dict[m_chi])
+#         print("---"*30)
 
-    sim0 = ares.simulations.Global21cm(
-        radiative_transfer=False, verbose=False, initial_redshift=1010, include_cgm=False, include_He=True)
-    sim0.run()
-    ax.plot(sim0.history['z'], sim0.history['dTb'], label="no DM heating".format(
-        sim0.pf['initial_redshift']), color='k', linewidth=3, linestyle='-')
+#     # sim = ares.simulations.Global21cm(radiative_transfer=False, verbose =False)
+#     # sim.run()
+#     # plt.plot(sim.history['z'], sim.history['dTb'], label="no DMheat, z_initial = {}".format(sim.pf['initial_redshift']), color='k', linestyle=':', linewidth=0.5)
 
-    z0 = sim0.history['z']
-    t0 = sim0.history['t']/31556952000000
-    z2t = interpolate.interp1d(z0, t0, fill_value='extrapolate')
-    t2z = interpolate.interp1d(t0, z0, fill_value='extrapolate')
+#     sim0 = ares.simulations.Global21cm(
+#         radiative_transfer=False, verbose=False, initial_redshift=1010, include_cgm=False, include_He=True)
+#     sim0.run()
+#     ax.plot(sim0.history['z'], sim0.history['dTb'], label="no DM heating".format(
+#         sim0.pf['initial_redshift']), color='k', linewidth=3, linestyle='-')
 
-    secax = ax.secondary_xaxis('top', functions=(z2t, t2z))
-    secax.set_xlabel('Age of Universe [Myr]', fontsize=11)
-    secax.set_xticks([1, 3, 5, 10, 20, 40, 160])
+#     z0 = sim0.history['z']
+#     t0 = sim0.history['t']/31556952000000
+#     z2t = interpolate.interp1d(z0, t0, fill_value='extrapolate')
+#     t2z = interpolate.interp1d(t0, z0, fill_value='extrapolate')
 
-    ax.set_xlabel("Redshift", fontsize=11)
-    ax.set_ylabel("Brightness Temperature [mK]", fontsize=11)
-    ax.set_ylim(-60, 0)
-    ax.set_xlim(10, 300)
-    # plt.title("global dTb vs z")
-    plt.legend(handlelength=3)
-    plt.savefig("average_dTb", dpi=720)
-    plt.show()
+#     secax = ax.secondary_xaxis('top', functions=(z2t, t2z))
+#     secax.set_xlabel('Age of Universe [Myr]', fontsize=11)
+#     secax.set_xticks([1, 3, 5, 10, 20, 40, 160])
+
+#     ax.set_xlabel("Redshift", fontsize=11)
+#     ax.set_ylabel("Brightness Temperature [mK]", fontsize=11)
+#     ax.set_ylim(-60, 0)
+#     ax.set_xlim(10, 300)
+#     # plt.title("global dTb vs z")
+#     plt.legend(handlelength=3)
+#     plt.savefig("average_dTb", dpi=720)
+#     plt.show()
