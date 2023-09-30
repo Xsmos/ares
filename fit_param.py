@@ -155,7 +155,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], cores=1, average_d
     if "bounds" in kwargs:
         bounds = kwargs['bounds']
     else:
-        bounds = kwargs['bounds'] = np.array([[0.001,10000],[100,80000]])
+        bounds = kwargs['bounds'] = np.array([[0.001,10000],[100,100000]])
 
     if "N_grid" in kwargs:
         N_grid = kwargs['N_grid']
@@ -423,10 +423,10 @@ if __name__ == '__main__':
     idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
     print("SLURM_ARRAY_TASK_ID", os.environ["SLURM_ARRAY_TASK_ID"])
 
-    m_chi_array = np.logspace(-2, 1, 7)
-    V_rms_array = np.linspace(20000, 40000, 5)
+    m_chi_array = np.logspace(-2, 1, 13)
+    V_rms_array = np.linspace(20000, 40000, 9)
     parameters = list(product(m_chi_array, V_rms_array))
 
     myparam = parameters[idx]
     print("myparam =", myparam)
-    param_fits = test(myparam, cores=-1, repeat=100, average_dir=f'average_dTb-{idx}-{myparam}', method="least_squares", noise=1, adequate_random_v_streams=24, N_grid=[100,100])
+    param_fits = test(myparam, cores=-1, repeat=100, average_dir=f'average_dTb-{idx}-{myparam}', method="least_squares", noise=1, adequate_random_v_streams=48, N_grid=[100,100])
