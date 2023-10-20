@@ -13,7 +13,7 @@ import os
 # import random
 import warnings
 import time
-from npy_append_array import NpyAppendArray
+# from npy_append_array import NpyAppendArray
 from itertools import product
 
 # In[2]:
@@ -32,7 +32,7 @@ def interp_dTb(param, z, cores=1, average_dir="average_dTb", **kwargs):  # 200 b
     # V_rms = int(round(V_rms,-1)) # accuracy: 10 m/s
 
     if "adequate_random_v_streams" not in kwargs:
-        adequate_random_v_streams = kwargs['adequate_random_v_streams'] = 200
+        adequate_random_v_streams = kwargs['adequate_random_v_streams'] = 20
     else:
         adequate_random_v_streams = kwargs['adequate_random_v_streams']
 
@@ -63,7 +63,7 @@ def interp_dTb(param, z, cores=1, average_dir="average_dTb", **kwargs):  # 200 b
 
     if more_random_v_streams:
         z_array, dTb_averaged, m_chi, V_rms = average_dTb(
-            m_chi=m_chi, more_random_v_streams=more_random_v_streams, cores=cores, verbose=False, V_rms=V_rms, average_dir=average_dir, **kwargs)
+            m_chi=m_chi, more_random_v_streams=more_random_v_streams, cores=cores, V_rms=V_rms, average_dir=average_dir, **kwargs)
 
     dTb = np.interp(z, z_array, dTb_averaged)
     return dTb
@@ -150,7 +150,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], cores=1, average_d
     if 'method' in kwargs:
         method = kwargs['method']
     else:
-        method = kwargs['method'] = 'enumerate'
+        method = kwargs['method'] = 'least_squares'
         
     if "bounds" in kwargs:
         bounds = kwargs['bounds']
@@ -195,27 +195,30 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], cores=1, average_d
             theta_fit = res.x
             if res.success == False:
                 continue
-        elif method == "curve_fit":
-            theta_fit, err_fit = curve_fit(interp_dTb_for_curve_fit, args_z, args_dTb, p0=param_guess, bounds=bounds)
-        elif method == 'enumerate':
-            grid = Grid(z_sample=z_sample, dTb_sample=dTb_sample, param_guess=param_guess, cores=cores, 
-                        average_dir=average_dir, delete_if_exists=delete_if_exists, save_name=save_name, **kwargs)
-            grid.generate_dTb_map()
-            grid.calculate_difference()
-            theta_fit = grid.find_least_squares()
-            
-
+        # elif method == "curve_fit":
+        #     theta_fit, err_fit = curve_fit(interp_dTb_for_curve_fit, args_z, args_dTb, p0=param_guess, bounds=bounds)
+        # elif method == 'enumerate':
+        #     grid = Grid(z_sample=z_sample, dTb_sample=dTb_sample, param_guess=param_guess, cores=cores, 
+        #                 average_dir=average_dir, delete_if_exists=delete_if_exists, save_name=save_name, **kwargs)
+        #     grid.generate_dTb_map()
+        #     grid.calculate_difference()
+        #     theta_fit = grid.find_least_squares()
         end_time = time.time()
         
         if method == "least_squares":
             print('#{}'.format(i+1), ', fit:', theta_fit, ', success:', res.success, ', status:', res.status, f', cost {(end_time-start_time)/60:.2f} min')
-        elif method == "enumerate":
-            print('#{}'.format(i+1), ', fit:', theta_fit, f', cost {(end_time-start_time)/60:.2f} min')
-            
+        # elif method == "enumerate":
+        #     print('#{}'.format(i+1), ', fit:', theta_fit, f', cost {(end_time-start_time)/60:.2f} min')
+        try:
+            pre_data = np.load(save_name)
+            data_updated = np.vstack((pre_data, theta_fit))
+            np.save(save_name, data_updated)
+        except FileNotFoundError:
+            np.save(save_name, theta_fit)
+        # np.load(save_name)
         print('---'*30)
-
-        with NpyAppendArray(save_name, delete_if_exists=delete_if_exists) as npaa:
-                npaa.append(np.array([theta_fit]))
+        # with NpyAppendArray(save_name, delete_if_exists=delete_if_exists) as npaa:
+        #         npaa.append(np.array([theta_fit]))
     return
 
 # In[3]:
@@ -414,19 +417,32 @@ def demonstrate_depreciate(file_dir="average_dTb/V_rms29000.0/m_chi0.10", N=[100
 
 
 if __name__ == '__main__':
-
+    # assumptions about the dark matter mass and rms stream velocity
+    m_chi_true = 0.1 # GeV
+    V_rms_true = 30000 # m/s
+    noise = 1 # mK. std of the signal noise, assumed to be Gaussian and frequency-independent
+    N_observations = 10 # number of observations
+    z_sample = np.arange(10, 300, 10) # redshifts corresponding to these observations
+    # bounds? #######################
+    cores = 1 # number of CPU
+    # sampling
+    dTb_accurate = interp_dTb(param=[m_chi_true, V_rms_true], z=z_sample, cores=cores, adequate_random_v_streams=5, verbose=True)
+    dTb_sample = dTb_accurate + noise * np.random.normal(size=(N_observations, z_sample.shape[0]))
+    # fitting
+    fit_param(z_sample, dTb_sample, cores=cores, save_name=f"m_chi{m_chi_true}-V_rms{V_rms_true}.npy", adequate_random_v_streams=5, verbose=True)
+    ######################################################################
     # for m_chi in np.logspace(-2, 0, 3):
     #     for V_rms in np.linspace(19000, 39000, 3):
     #         param_fits = test([m_chi, V_rms], cores=1, method="least_squares", repeat=20, noise=1, average_dir="average_dTb", adequate_random_v_streams=10, N_grid=[10,10])
 
     ######################################################################
-    idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
-    print("SLURM_ARRAY_TASK_ID", os.environ["SLURM_ARRAY_TASK_ID"])
+    # idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
+    # print("SLURM_ARRAY_TASK_ID", os.environ["SLURM_ARRAY_TASK_ID"])
 
-    m_chi_array = np.logspace(-2, 1, 13)
-    V_rms_array = np.linspace(20000, 40000, 9)
-    parameters = list(product(m_chi_array, V_rms_array))
+    # m_chi_array = np.logspace(-2, 1, 13)
+    # V_rms_array = np.linspace(20000, 40000, 9)
+    # parameters = list(product(m_chi_array, V_rms_array))
 
-    myparam = parameters[idx]
-    print("myparam =", myparam)
-    param_fits = test(myparam, cores=-1, repeat=100, average_dir=f'average_dTb-{idx}-{myparam}', method="least_squares", noise=1, adequate_random_v_streams=48, N_grid=[100,100])
+    # myparam = parameters[idx]
+    # print("myparam =", myparam)
+    # param_fits = test(myparam, cores=-1, repeat=100, average_dir=f'average_dTb-{idx}-{myparam}', method="least_squares", noise=1, adequate_random_v_streams=48, N_grid=[100,100])

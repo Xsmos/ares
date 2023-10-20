@@ -14,10 +14,15 @@ from test_ares import test_ares
 # N = 5  # number of initial_v_stream
 
 
-def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, verbose=True, V_rms=29000, average_dir='average_dTb', **kwargs):
+def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, V_rms=29000, average_dir='average_dTb', **kwargs):
     """
     randomly generate N initial_v_streams and calculate their 21cm temperatures with dark_matter_heating.
     """
+    if 'verbose' not in kwargs:
+        verbose = False
+    else:
+        verbose = kwargs['verbose']
+
 
     pf = \
         {
@@ -116,14 +121,17 @@ def integrate_dTb_with_Probability(dTbs, file_names, V_rms):
     # print(__name__, "dTb_averaged", dTb_averaged)
     return dTb_averaged
 
-def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores=1, verbose=True, V_rms=29000, average_dir="average_dTb", **kwargs):
+def average_dTb(m_chi=0.1, N_z=1000, plot=False, more_random_v_streams=10, cores=1, V_rms=29000, average_dir="average_dTb", **kwargs):
     warnings.simplefilter("ignore", UserWarning)
     # path = "{}/average_dTb/V_rms{:.0f}/m_chi{:.2f}".format(average_dir, round(V_rms, -1), m_chi)
     if 'adequate_random_v_streams' not in kwargs:
         kwargs['adequate_random_v_streams'] = 10
+    if 'verbose' not in kwargs:
+        verbose = kwargs['verbose'] = False
+
     path = "{}/V_rms{}/m_chi{}".format(average_dir, V_rms, m_chi)
     if not os.path.exists(path+'.npy') or more_random_v_streams:
-        dTb_random_v_stream(m_chi, N=more_random_v_streams, cores=cores, verbose=verbose, V_rms=V_rms, average_dir=average_dir, **kwargs)
+        dTb_random_v_stream(m_chi, N=more_random_v_streams, cores=cores, V_rms=V_rms, average_dir=average_dir, **kwargs)
 
     file_names = os.listdir(path)
     # print("Preprocessing {} files of dTb for m_chi = {} GeV...".format(len(file_names), m_chi))
