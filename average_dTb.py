@@ -8,7 +8,7 @@ import multiprocessing
 from multiprocessing import Pool
 import warnings
 import shutil
-from test_ares import test_ares
+# from test_ares import test_ares
 
 # V_rms = 29000  # m/s
 # N = 5  # number of initial_v_stream
@@ -22,7 +22,6 @@ def dTb_random_v_stream(m_chi=0.1, N=10, cores=1, V_rms=29000, average_dir='aver
         verbose = False
     else:
         verbose = kwargs['verbose']
-
 
     pf = \
         {
