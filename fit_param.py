@@ -2,29 +2,28 @@
 # coding: utf-8
 
 import numpy as np
-import matplotlib.pyplot as plt
 import ares
 import os
 import warnings
 from datetime import datetime
 from itertools import product
-from scipy import interpolate
+from scipy.interpolate import interp1d
 import multiprocessing
 from multiprocessing import Pool
 import shutil
-from scipy.optimize import least_squares, curve_fit
+from scipy.optimize import least_squares
 
-def dTb_v_stream_list(m_chi=0.1, cores=1, V_rms=29000, average_dir='average_dTb', **kwargs):
+def dTb_v_stream_list(m_chi=0.1, cores=1, V_rms=29000, average_dir='dTb_averaged', **kwargs):
     """
     generate initial_v_streams and calculate their 21cm temperatures with dark_matter_heating.
     """
     if 'verbose' not in kwargs:
-        verbose = False
+        verbose = 1
     else:
         verbose = kwargs['verbose']
 
-    if "N_v_stream" not in kwargs:
-        kwargs['N_v_stream'] = 3
+    if "N_v_streams" not in kwargs:
+        kwargs['N_v_streams'] = 12
 
     pf = \
         {
@@ -36,16 +35,17 @@ def dTb_v_stream_list(m_chi=0.1, cores=1, V_rms=29000, average_dir='average_dTb'
             'include_He': True
         }
 
-    initial_v_stream_list = np.linspace(1, 3*V_rms, kwargs['N_v_stream'])
+    initial_v_stream_list = np.linspace(1, 3*V_rms, kwargs['N_v_streams'])
     path = "{}/V_rms{}/m_chi{}".format(average_dir, V_rms, m_chi)
     if not os.path.exists(path):
         os.makedirs(path)
 
     start_time = datetime.now()
     if cores == 1:
-        print(f"Sampling {kwargs['N_v_stream']} dTb's by 1 CPU...", end='')
+        if kwargs['verbose'] >= 1:
+            print(f"Sampling {kwargs['N_v_streams']} dTb's by 1 CPU...", end='')
         for i, initial_v_stream in enumerate(initial_v_stream_list):
-            if verbose:
+            if verbose >= 2:
                 print("\ninitial_v_stream =", initial_v_stream, 'm/s', end='')
 
             sim = ares.simulations.Global21cm(initial_v_stream=initial_v_stream, dark_matter_mass=m_chi, **pf)
@@ -59,11 +59,12 @@ def dTb_v_stream_list(m_chi=0.1, cores=1, V_rms=29000, average_dir='average_dTb'
             cpu_count = multiprocessing.cpu_count()
         else:
             cpu_count = cores
-        print(f"Sampling {kwargs['N_v_stream']} dTb's by {cpu_count} CPUs parallelly...", end='')
+        if kwargs['verbose'] >= 1:
+            print(f"Sampling {kwargs['N_v_streams']} dTb's by {cpu_count} CPUs parallelly...", end='')
         global f_mpi
 
         def f_mpi(initial_v_stream):
-            if verbose:
+            if verbose >= 2:
                 print("\npid = {}, initial_v_stream = {} m/s".format(os.getpid(),
                       initial_v_stream), end='')
             
@@ -80,8 +81,8 @@ def dTb_v_stream_list(m_chi=0.1, cores=1, V_rms=29000, average_dir='average_dTb'
 
     end_time = datetime.now()
     time_elapse = end_time - start_time
-    print("\nIt costs {} to calculate dTb of {} different initial_v_streams by {} CPU(s).".format(
-        time_elapse, kwargs['N_v_stream'], number_of_CPUs))
+    if kwargs['verbose'] >= 1:
+        print(f"\nIt costs {time_elapse} to calculate dTb of {kwargs['N_v_streams']} different initial_v_streams by {number_of_CPUs} CPU"+(number_of_CPUs!=1)*"s"+".")
 
 def Gaussian_3D(v, V_rms):
     P = np.exp(-3*v**2/(2*V_rms**2)) / (2*np.pi/3*V_rms**2)**(3/2)
@@ -94,30 +95,33 @@ def integrate_dTb_with_Probability(dTbs, file_names, V_rms):
     dTb_averaged = dTbs.T@probabilities / probabilities.sum()
     return dTb_averaged
 
-def average_dTb(m_chi=0.1, N_z=1000, cores=1, V_rms=29000, average_dir="average_dTb", **kwargs):
+def average_dTb(m_chi=0.1, N_z=3000, cores=1, V_rms=29000, average_dir="dTb_averaged", **kwargs):
     warnings.simplefilter("ignore", UserWarning)
-    if 'N_v_stream' not in kwargs:
-        kwargs['N_v_stream'] = 10
+    if 'N_v_streams' not in kwargs:
+        kwargs['N_v_streams'] = 12
     if 'verbose' not in kwargs:
-        verbose = kwargs['verbose'] = False
+        verbose = kwargs['verbose'] = 1
 
     path = "{}/V_rms{}/m_chi{}".format(average_dir, V_rms, m_chi)
-    if not os.path.exists(path+'.npy') or kwargs["N_v_stream"]:
+    if not os.path.exists(path+'.npy') or kwargs["N_v_streams"]:
         dTb_v_stream_list(m_chi, cores=cores, V_rms=V_rms, average_dir=average_dir, **kwargs)
 
     file_names = os.listdir(path)
 
-    z_array = np.linspace(5, 1010, N_z)
+    z_array = np.linspace(5, 3000, N_z)
 
     for file_name in file_names:
         data = np.load(path+"/{}".format(file_name))
-        dTb_interp = np.interp(z_array, data[0][::-1], data[1][::-1])
+        f = interp1d(data[0][::-1], data[1][::-1], kind='cubic', fill_value="extrapolate")
+        dTb_interp = f(z_array)
         if "all_dTb_interp" not in vars():
             all_dTb_interp = dTb_interp.copy()
         else:
             all_dTb_interp = np.vstack((all_dTb_interp, dTb_interp))
 
     if not os.path.exists(path+'.npy'):
+        np.save(path, np.vstack((z_array, all_dTb_interp)))
+    elif kwargs['N_v_streams'] != np.load(path+'.npy').shape[0]-1:
         np.save(path, np.vstack((z_array, all_dTb_interp)))
     else:
         old_data = np.load(path+'.npy')
@@ -130,7 +134,7 @@ def average_dTb(m_chi=0.1, N_z=1000, cores=1, V_rms=29000, average_dir="average_
     shutil.rmtree(path, ignore_errors=True)
     return (z_array, dTb_averaged, m_chi, V_rms)
 
-def interp_dTb(param, z, cores=1, average_dir="average_dTb", **kwargs):
+def interp_dTb(param, z, cores=1, average_dir="dTb_averaged", **kwargs):
     """
     functions:
     1. generate adequate random stream velocities subject to 3D Gaussian distribution;
@@ -139,44 +143,50 @@ def interp_dTb(param, z, cores=1, average_dir="average_dTb", **kwargs):
     """
     m_chi, V_rms = param
 
-    if "N_v_stream" not in kwargs:
-        kwargs['N_v_stream'] = 24
+    if "N_v_streams" not in kwargs:
+        kwargs['N_v_streams'] = 12
 
-    N_v_stream = kwargs['N_v_stream']
+    if "verbose" not in kwargs:
+        kwargs['verbose'] = 1
+
+    N_v_streams = kwargs['N_v_streams']
     directory = "{}/V_rms{}/m_chi{}".format(average_dir, V_rms, m_chi)
     if os.path.exists(directory+'.npy'):
         data = np.load(directory+'.npy')
-        if data.shape[0]-1 == kwargs['N_v_stream'] and os.path.exists(directory+'_averaged.npy'):
+        if data.shape[0]-1 == kwargs['N_v_streams'] and os.path.exists(directory+'_averaged.npy'):
             z_array, dTb_averaged = np.load(directory+'_averaged.npy')
-            N_v_stream = 0
-            print("Existing averaged dTb and z are loaded for m_chi = {} GeV and V_rms = {} m/s.".format(m_chi, V_rms))
+            N_v_streams = 0
+            if kwargs['verbose'] >= 1:
+                print("Existing averaged dTb and z are loaded for m_chi = {} GeV and V_rms = {} m/s.".format(m_chi, V_rms))
 
-    if N_v_stream:
-        print("{} v_streams will be generated for m_chi = {} GeV and V_rms = {} m/s...".format(N_v_stream, m_chi, V_rms))
+    if N_v_streams:
+        if kwargs['verbose'] >= 1:
+            print("{} v_streams will be generated for m_chi = {} GeV and V_rms = {} m/s...".format(N_v_streams, m_chi, V_rms))
         z_array, dTb_averaged, m_chi, V_rms = average_dTb(m_chi=m_chi, cores=cores, V_rms=V_rms, average_dir=average_dir, **kwargs)
     
-    print("---"*15)
-    dTb = np.interp(z, z_array, dTb_averaged)
+    f = interp1d(z_array, dTb_averaged, fill_value="extrapolate", kind='cubic')
+    dTb = f(z)
+    if kwargs['verbose'] >= 1:
+        print("---"*15)
     return dTb
 
-def residual(param, z_sample, dTb_sample, kwargs, cores=1, average_dir="average_dTb"):
+def residual(param, z_sample, dTb_sample, kwargs, cores=1, average_dir="dTb_averaged"):
     residual = interp_dTb(param, z_sample, cores, average_dir=average_dir, **kwargs) - dTb_sample
     return residual
 
-def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], cores=1, average_dir='average_dTb', save_name="fitted_m_chi_V_rms.npy", **kwargs):
+def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], cores=1, average_dir='dTb_averaged', save_name="m_chi-V_rms.npy", **kwargs):
     '''
     fit the parameter(s) by z_sample and dTb_sample via scipy.optimize.least_squares.
     '''        
     fit_start = datetime.now()
-    if "bounds" in kwargs:
-        bounds = kwargs['bounds']
-    else:
-        bounds = kwargs['bounds'] = np.array([[0.001,10000],[100,100000]])
+    print("Fitting starts...")
+    if "bounds" not in kwargs:
+        kwargs['bounds'] = np.array([[0.001,10000],[100,100000]])
 
-    if "N_grid" in kwargs:
-        N_grid = kwargs['N_grid']
-    else:
-        N_grid = kwargs['N_grid'] = (5,5)
+    if 'verbose' not in kwargs:
+        kwargs['verbose'] = 1
+    if kwargs['verbose'] >= 1:
+        print("kwargs =", kwargs)
 
     warnings.simplefilter("ignore", UserWarning)
 
@@ -201,7 +211,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], cores=1, average_d
             args_dTb = dTb_sample[i]
 
         start_time = datetime.now()
-        res = least_squares(residual, param_guess, bounds=bounds, args=(args_z, args_dTb, kwargs, cores, average_dir), diff_step=0.1)
+        res = least_squares(residual, param_guess, bounds=kwargs['bounds'], args=(args_z, args_dTb, kwargs, cores, average_dir), diff_step=0.1)
         theta_fit = res.x
         if res.success == False:
             continue
@@ -212,36 +222,19 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], cores=1, average_d
         try:
             pre_data = np.load(save_name)
             data_updated = np.vstack((pre_data, theta_fit))
-            np.save(save_name, data_updated)
         except FileNotFoundError:
-            np.save(save_name, theta_fit)
-        print('---'*30)
+            data_updated = theta_fit
+        np.save(save_name, data_updated)
+        if kwargs['verbose'] >= 1:
+            print('---'*30)
     fit_end = datetime.now()
-    print(f"The fitting costs {fit_end-fit_start} for {dTb_sample.shape[1]} observations.")
-    return
-
-def test(param_true=[0.15, 29000], noise=0.01, cores=-1, z_sample=np.arange(10, 800, 1), stop_plot=5, repeat=20, plot=True, average_dir="average_dTb", delete_if_exists=False, param_guess=[0.1, 29000], **kwargs):
-    """
-    functions:
-    1. test the fit_param();
-    2. showed that fit_param() works well for m_chi < 1 GeV. 
-    """
-    print("param_true =", param_true)
-        
-    # sampling
-    dTb_accurate = interp_dTb(param_true, z_sample, cores, average_dir=average_dir, **kwargs)
-    dTb_sample = dTb_accurate + noise * np.random.normal(size=(repeat, z_sample.shape[0]))
-
-    start_time = datetime.now()
-    fit_param(z_sample, dTb_sample, cores=cores, average_dir=average_dir, delete_if_exists=delete_if_exists, save_name="m_chi{}-V_rms{}.npy".format(param_true[0], param_true[1]), param_guess=param_guess, **kwargs)
-    end_time = datetime.now()
-
-    print(f"It costs {end_time-start_time} to complete the calculation.")
+    print(f"The fitting costs {fit_end-fit_start} for {dTb_sample.shape[0]} observations.")
+    return data_updated
 
 if __name__ == '__main__':
     # for m_chi in np.logspace(-2, 0, 3):
     #     for V_rms in np.linspace(19000, 39000, 3):
-    #         param_fits = test([m_chi, V_rms], cores=1, repeat=20, noise=1, average_dir="average_dTb", N_v_stream=10, N_grid=[10,10])
+    #         param_fits = test([m_chi, V_rms], cores=1, repeat=20, noise=1, average_dir="dTb_averaged", N_v_streams=10)
 
     ######################################################################
     idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
@@ -253,4 +246,4 @@ if __name__ == '__main__':
 
     myparam = parameters[idx]
     print("myparam =", myparam)
-    param_fits = test(myparam, cores=-1, repeat=100, average_dir=f'average_dTb-{idx}-{myparam}', noise=1, N_v_stream=48, N_grid=[100,100])
+    param_fits = test(myparam, cores=-1, repeat=100, average_dir=f'dTb_averaged-{idx}-{myparam}', noise=1, N_v_streams=48)
