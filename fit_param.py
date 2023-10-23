@@ -217,7 +217,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], cores=1, average_d
             continue
         end_time = datetime.now()
 
-        print(f'#{i+1}, res_fit: {theta_fit}, cost: {end_time-start_time}')
+        print(f'#{i+1}, res: {theta_fit}, cost: {end_time-start_time}')
 
         try:
             pre_data = np.load(save_name)
@@ -228,7 +228,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], cores=1, average_d
         if kwargs['verbose'] >= 1:
             print('---'*30)
     fit_end = datetime.now()
-    print(f"The fitting costs {fit_end-fit_start} for {dTb_sample.shape[0]} observations.")
+    print(f"The fitting process costs {fit_end-fit_start} for {dTb_sample.shape[0]} observations.")
     return data_updated
 
 if __name__ == '__main__':
