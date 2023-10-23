@@ -34,4 +34,5 @@ htmlcov
 .DS_Store
 tests/*.pkl
 tests/*.txt
+average_dTb*/
 dTb_averaged*/
