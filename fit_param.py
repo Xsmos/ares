@@ -217,7 +217,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], cores=1, average_d
             continue
         end_time = datetime.now()
 
-        print('#{}'.format(i+1), ', fit:', theta_fit, ', success:', res.success, ', status:', res.status, f', cost {end_time-start_time}')
+        print(f'#{i+1}, res_fit: {theta_fit}, cost: {end_time-start_time}')
 
         try:
             pre_data = np.load(save_name)
