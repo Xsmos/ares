@@ -35,3 +35,4 @@ htmlcov
 tests/*.pkl
 tests/*.txt
 dTb_averaged*/
+.*~

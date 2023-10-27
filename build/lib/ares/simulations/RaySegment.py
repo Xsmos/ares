@@ -28,7 +28,6 @@ class RaySegment(AnalyzeRay):
         """
 
         self.parcel = GasParcel(**kwargs)
-        print('In', __name__, "dark_matter_heating =", kwargs['dark_matter_heating']) # added by Bin Xia
         
         self.pf = self.parcel.pf
         self.grid = self.parcel.grid

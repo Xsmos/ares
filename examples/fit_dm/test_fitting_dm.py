@@ -188,6 +188,7 @@ def fit_param(z_sample, dTb_sample, param_guess=[0.1, 29000], cores=1, average_d
     if kwargs['verbose'] >= 1:
         print("kwargs =", kwargs)
 
+    print('kwargs =', kwargs)
     warnings.simplefilter("ignore", UserWarning)
 
     if z_sample.ndim == 1 and dTb_sample.ndim != 1:
