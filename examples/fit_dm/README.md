@@ -1,4 +1,4 @@
-# ARES
+# Fit Dark Matter Parameters
 The Accelerated Reionization Era Simulations ([`ARES`](https://ares.readthedocs.io/en/latest/index.html)) code was designed to rapidly generate models for the global 21-cm signal.
 
 Based on [Muñoz et al., 2015](https://journals.aps.org/prd/abstract/10.1103/PhysRevD.92.083528), we added `ares/physics/DarkMatterHeating.py` to the original ARES to discuss the heating of baryons due to scattering with dark matter during the dark ages.
