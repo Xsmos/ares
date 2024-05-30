@@ -129,6 +129,7 @@ def average_dTb(m_chi=0.1, N_z=3000, cores=1, V_rms=29000, average_dir="dTb_aver
         np.save(path, new_data)
 
     data = np.load(path+'.npy')
+    # print("file_names =", file_names)
     dTb_averaged = integrate_dTb_with_Probability(data[1:], file_names, V_rms)
     np.save(path+"_averaged".format(m_chi), np.vstack((z_array, dTb_averaged)))
     shutil.rmtree(path, ignore_errors=True)
